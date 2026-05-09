@@ -6,10 +6,6 @@ compatibility_date = "2025-05-01"
 binding = "FILE_HUB"
 id = "dbcc16e231c54aceb7682ccd5f22c997"
 
-[build]
-command = "npm install"
-cwd = "."
-
 [[env.production.kv_namespaces]]
 binding = "FILE_HUB"
 id = "dbcc16e231c54aceb7682ccd5f22c997"

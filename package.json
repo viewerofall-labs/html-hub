@@ -1,0 +1,13 @@
+{
+  "name": "file-hub",
+  "version": "1.0.0",
+  "description": "File browser hub for Cloudflare Workers",
+  "main": "worker.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^3.95.0"
+  }
+}
