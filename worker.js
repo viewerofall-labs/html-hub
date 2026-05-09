@@ -39,7 +39,7 @@ export default {
 
 		// File serving: load file at natural path
 		const filePath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
-		
+
 		// Find file in manifest
 		const file = manifest.find(f => f.path === filePath);
 		if (!file) {
@@ -49,7 +49,7 @@ export default {
 		// Fetch from GitHub raw
 		const githubUrl = `https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/${file.path}`;
 		const response = await fetch(githubUrl);
-		
+
 		if (!response.ok) {
 			return new Response('File fetch failed', { status: response.status });
 		}
@@ -63,263 +63,263 @@ export default {
 
 function getHubHTML() {
 	return `<!DOCTYPE html>
-<html lang="en">
-<head>
+	<html lang="en">
+	<head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>File Hub</title>
 	<style>
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-		
-		body {
-			font-family: 'Inconsolata', monospace;
-			background: #0a0010;
-			color: #c792ea;
-			display: flex;
-			height: 100vh;
-		}
+	* { margin: 0; padding: 0; box-sizing: border-box; }
 
-		.sidebar {
-			width: 280px;
-			background: #0f0015;
-			border-right: 2px solid #c792ea;
-			padding: 20px;
-			overflow-y: auto;
-			display: flex;
-			flex-direction: column;
-			gap: 15px;
-		}
+	body {
+		font-family: 'Inconsolata', monospace;
+		background: #0a0010;
+		color: #c792ea;
+		display: flex;
+		height: 100vh;
+	}
 
-		.search-box {
-			width: 100%;
-			padding: 10px;
-			background: #1a001f;
-			border: 1px solid #00e5c8;
-			color: #c792ea;
-			border-radius: 4px;
-			font-family: 'Inconsolata', monospace;
-		}
+	.sidebar {
+		width: 280px;
+		background: #0f0015;
+		border-right: 2px solid #c792ea;
+		padding: 20px;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+	}
 
-		.file-list {
-			flex: 1;
-			overflow-y: auto;
-		}
+	.search-box {
+		width: 100%;
+		padding: 10px;
+		background: #1a001f;
+		border: 1px solid #00e5c8;
+		color: #c792ea;
+		border-radius: 4px;
+		font-family: 'Inconsolata', monospace;
+	}
 
-		.file-item {
-			padding: 8px 10px;
-			cursor: pointer;
-			border-radius: 3px;
-			transition: all 0.2s;
-			font-size: 14px;
-			word-break: break-word;
-		}
+	.file-list {
+		flex: 1;
+		overflow-y: auto;
+	}
 
-		.file-item:hover {
-			background: #1a001f;
-			color: #00e5c8;
-		}
+	.file-item {
+		padding: 8px 10px;
+		cursor: pointer;
+		border-radius: 3px;
+		transition: all 0.2s;
+		font-size: 14px;
+		word-break: break-word;
+	}
 
-		.file-item.active {
-			background: #c792ea;
-			color: #0a0010;
-		}
+	.file-item:hover {
+		background: #1a001f;
+		color: #00e5c8;
+	}
 
-		.folder-header {
-			font-weight: bold;
-			color: #00e5c8;
-			margin-top: 10px;
-			font-size: 12px;
-			text-transform: uppercase;
-		}
+	.file-item.active {
+		background: #c792ea;
+		color: #0a0010;
+	}
 
-		.content {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
+	.folder-header {
+		font-weight: bold;
+		color: #00e5c8;
+		margin-top: 10px;
+		font-size: 12px;
+		text-transform: uppercase;
+	}
 
-		.toolbar {
-			background: #1a001f;
-			border-bottom: 2px solid #c792ea;
-			padding: 12px 20px;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
+	.content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
 
-		.toolbar-left {
-			display: flex;
-			gap: 10px;
-			align-items: center;
-		}
+	.toolbar {
+		background: #1a001f;
+		border-bottom: 2px solid #c792ea;
+		padding: 12px 20px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
 
-		.breadcrumb {
-			color: #00e5c8;
-			font-size: 13px;
-		}
+	.toolbar-left {
+		display: flex;
+		gap: 10px;
+		align-items: center;
+	}
 
-		.exit-btn {
-			padding: 6px 12px;
-			background: #c792ea;
-			border: none;
-			color: #0a0010;
-			border-radius: 3px;
-			cursor: pointer;
-			font-weight: bold;
-			transition: all 0.2s;
-			font-family: 'Inconsolata', monospace;
-		}
+	.breadcrumb {
+		color: #00e5c8;
+		font-size: 13px;
+	}
 
-		.exit-btn:hover {
-			background: #00e5c8;
-		}
+	.exit-btn {
+		padding: 6px 12px;
+		background: #c792ea;
+		border: none;
+		color: #0a0010;
+		border-radius: 3px;
+		cursor: pointer;
+		font-weight: bold;
+		transition: all 0.2s;
+		font-family: 'Inconsolata', monospace;
+	}
 
-		.iframe-container {
-			flex: 1;
-			border: none;
-			overflow: hidden;
-		}
+	.exit-btn:hover {
+		background: #00e5c8;
+	}
 
-		.no-file {
-			flex: 1;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #666;
-			font-size: 18px;
-		}
+	.iframe-container {
+		flex: 1;
+		border: none;
+		overflow: hidden;
+	}
+
+	.no-file {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #666;
+		font-size: 18px;
+	}
 	</style>
-</head>
-<body>
+	</head>
+	<body>
 	<div class="sidebar">
-		<input type="text" class="search-box" id="search" placeholder="Search files...">
-		<div class="file-list" id="fileList"></div>
+	<input type="text" class="search-box" id="search" placeholder="Search files...">
+	<div class="file-list" id="fileList"></div>
 	</div>
 
 	<div class="content">
-		<div class="toolbar">
-			<div class="toolbar-left">
-				<span class="breadcrumb" id="breadcrumb">Select a file</span>
-			</div>
-			<button class="exit-btn" onclick="exitFile()">← Exit</button>
-		</div>
-		<div id="viewContainer" class="no-file">Select a file to load</div>
+	<div class="toolbar">
+	<div class="toolbar-left">
+	<span class="breadcrumb" id="breadcrumb">Select a file</span>
+	</div>
+	<button class="exit-btn" onclick="exitFile()">← Exit</button>
+	</div>
+	<div id="viewContainer" class="no-file">Select a file to load</div>
 	</div>
 
 	<script>
-		let files = [];
-		let currentFile = null;
+	let files = [];
+	let currentFile = null;
 
-		async function loadFiles() {
-			const res = await fetch('/api/files');
-			files = await res.json();
-			renderFileList(files);
-		}
+	async function loadFiles() {
+		const res = await fetch('/api/files');
+		files = await res.json();
+		renderFileList(files);
+	}
 
-		function renderFileList(filteredFiles) {
-			const fileList = document.getElementById('fileList');
-			fileList.innerHTML = '';
+	function renderFileList(filteredFiles) {
+		const fileList = document.getElementById('fileList');
+		fileList.innerHTML = '';
 
-			const grouped = {};
-			filteredFiles.forEach(file => {
-				const folder = file.folder || 'root';
-				if (!grouped[folder]) grouped[folder] = [];
-				grouped[folder].push(file);
-			});
-
-			// Root first
-			if (grouped['.']) {
-				grouped['.'].forEach(file => {
-					const item = createFileItem(file);
-					fileList.appendChild(item);
-				});
-			}
-
-			// Then folders
-			Object.keys(grouped).filter(k => k !== '.').sort().forEach(folder => {
-				const header = document.createElement('div');
-				header.className = 'folder-header';
-				header.textContent = folder;
-				fileList.appendChild(header);
-
-				grouped[folder].forEach(file => {
-					const item = createFileItem(file);
-					fileList.appendChild(item);
-				});
-			});
-		}
-
-		function createFileItem(file) {
-			const item = document.createElement('div');
-			item.className = 'file-item';
-			item.textContent = file.name;
-			item.onclick = () => loadFile(file);
-			return item;
-		}
-
-		function loadFile(file) {
-			currentFile = file;
-			const viewContainer = document.getElementById('viewContainer');
-			const breadcrumb = document.getElementById('breadcrumb');
-
-			breadcrumb.textContent = file.path;
-
-			viewContainer.innerHTML = `<iframe src="/${file.path}" class="iframe-container" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>`;
-
-			// Highlight active file
-			document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
-			event.target.classList.add('active');
-		}
-
-		function exitFile() {
-			currentFile = null;
-			const viewContainer = document.getElementById('viewContainer');
-			const breadcrumb = document.getElementById('breadcrumb');
-			viewContainer.innerHTML = '<div class="no-file">Select a file to load</div>';
-			breadcrumb.textContent = 'Select a file';
-			document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
-		}
-
-		document.getElementById('search').addEventListener('input', (e) => {
-			const query = e.target.value.toLowerCase();
-			const filtered = files.filter(f => f.name.toLowerCase().includes(query) || f.path.toLowerCase().includes(query));
-			renderFileList(filtered);
+		const grouped = {};
+		filteredFiles.forEach(file => {
+			const folder = file.folder || 'root';
+			if (!grouped[folder]) grouped[folder] = [];
+			grouped[folder].push(file);
 		});
 
-		loadFiles();
+		// Root first
+		if (grouped['.']) {
+			grouped['.'].forEach(file => {
+				const item = createFileItem(file);
+				fileList.appendChild(item);
+			});
+		}
+
+		// Then folders
+		Object.keys(grouped).filter(k => k !== '.').sort().forEach(folder => {
+			const header = document.createElement('div');
+			header.className = 'folder-header';
+			header.textContent = folder;
+			fileList.appendChild(header);
+
+			grouped[folder].forEach(file => {
+				const item = createFileItem(file);
+				fileList.appendChild(item);
+			});
+		});
+	}
+
+	function createFileItem(file) {
+		const item = document.createElement('div');
+		item.className = 'file-item';
+		item.textContent = file.name;
+		item.onclick = () => loadFile(file);
+		return item;
+	}
+
+	function loadFile(file) {
+		currentFile = file;
+		const viewContainer = document.getElementById('viewContainer');
+		const breadcrumb = document.getElementById('breadcrumb');
+
+		breadcrumb.textContent = file.path;
+
+		viewContainer.innerHTML = '<iframe src="/' + file.path + '" class="iframe-container" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>';
+
+		// Highlight active file
+		document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
+		event.target.classList.add('active');
+	}
+
+	function exitFile() {
+		currentFile = null;
+		const viewContainer = document.getElementById('viewContainer');
+		const breadcrumb = document.getElementById('breadcrumb');
+		viewContainer.innerHTML = '<div class="no-file">Select a file to load</div>';
+		breadcrumb.textContent = 'Select a file';
+		document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
+	}
+
+	document.getElementById('search').addEventListener('input', (e) => {
+		const query = e.target.value.toLowerCase();
+		const filtered = files.filter(f => f.name.toLowerCase().includes(query) || f.path.toLowerCase().includes(query));
+		renderFileList(filtered);
+	});
+
+	loadFiles();
 	</script>
-</body>
-</html>`;
+	</body>
+	</html>`;
 }
 
 function getLockdownHTML() {
 	return `<!DOCTYPE html>
-<html lang="en">
-<head>
+	<html lang="en">
+	<head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Lockdown</title>
 	<style>
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-		body {
-			font-family: 'Inconsolata', monospace;
-			background: #0a0010;
-			color: #c792ea;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			height: 100vh;
-		}
-		.lockdown-container {
-			text-align: center;
-			font-size: 24px;
-		}
+	* { margin: 0; padding: 0; box-sizing: border-box; }
+	body {
+		font-family: 'Inconsolata', monospace;
+		background: #0a0010;
+		color: #c792ea;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100vh;
+	}
+	.lockdown-container {
+		text-align: center;
+		font-size: 24px;
+	}
 	</style>
-</head>
-<body>
+	</head>
+	<body>
 	<div class="lockdown-container">
-		Lockdown active, server will be up soon
+	Lockdown active, server will be up soon
 	</div>
-</body>
-</html>`;
+	</body>
+	</html>`;
 }
