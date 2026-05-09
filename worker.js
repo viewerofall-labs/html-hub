@@ -2,6 +2,8 @@ import manifest from './files.json';
 
 const LOCKDOWN_KEY = 'CHElc&3=5g';
 const KV_NAMESPACE = 'FILE_HUB';
+const CONTROL_PANEL_URL = 'https://devpanel.joemomanugget.workers.dev';
+const CONTROL_TOKEN = 'CHElc&3=5g';
 
 export default {
 	async fetch(request, env, ctx) {
@@ -25,7 +27,7 @@ export default {
 		}
 
 		if (pathname === '/' || pathname === '/index.html') {
-			return new Response(getHubHTML(), { headers: { 'Content-Type': 'text/html' } });
+			return new Response(await getHubHTML(env), { headers: { 'Content-Type': 'text/html' } });
 		}
 
 		if (pathname === '/api/files') {
@@ -56,7 +58,21 @@ export default {
 	},
 };
 
-function getHubHTML() {
+async function getHubHTML(env) {
+	let bannerHTML = '';
+	try {
+		const state = await env[KV_NAMESPACE].get('global_state');
+		const config = state ? JSON.parse(state) : {};
+		if (config.banner?.enabled) {
+			const bgColor = config.banner.color === 'warning' ? '#ffaa44' : config.banner.color || '#c792ea';
+			bannerHTML = `<div style="background: ${bgColor}; color: #0a0010; padding: 12px; text-align: center; font-weight: bold; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;">
+			${config.banner.content}
+			</div>`;
+		}
+	} catch (e) {
+		// silently fail if control panel not set up yet
+	}
+
 	return `<!DOCTYPE html>
 	<html lang="en">
 	<head>
@@ -66,7 +82,7 @@ function getHubHTML() {
 	<style>
 	* { margin: 0; padding: 0; box-sizing: border-box; }
 	html, body { width: 100%; height: 100%; }
-	body { font-family: 'Inconsolata', monospace; background: #0a0010; color: #c792ea; display: flex; }
+	body { font-family: 'Inconsolata', monospace; background: #0a0010; color: #c792ea; display: flex; margin-top: ${bannerHTML ? '50px' : '0'}; }
 	.sidebar { width: 280px; background: #0f0015; border-right: 2px solid #c792ea; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
 	.search-box { width: 100%; padding: 10px; background: #1a001f; border: 1px solid #00e5c8; color: #c792ea; border-radius: 4px; font-family: 'Inconsolata', monospace; }
 	.file-list { flex: 1; overflow-y: auto; }
@@ -86,6 +102,7 @@ function getHubHTML() {
 	</style>
 	</head>
 	<body>
+	${bannerHTML}
 	<div class="sidebar">
 	<input type="text" class="search-box" id="search" placeholder="Search files...">
 	<div class="file-list" id="fileList"></div>
@@ -198,7 +215,7 @@ function getLockdownHTML() {
 	</style>
 	</head>
 	<body>
-	<div class="lockdown-container">Lockdown active, server will be up soon</div>
+	<div class="lockdown-container">🔒 Lockdown active, server will be up soon</div>
 	</body>
 	</html>`;
 }
