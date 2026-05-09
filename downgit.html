@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web File Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .examples h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Web File Downloader</h1>
+        <p class="subtitle">Download files and repositories from any web source</p>
+
+        <div class="input-group">
+            <label for="urlInput">File or Repository URL</label>
+            <input type="text" id="urlInput" placeholder="https://aur.archlinux.org/yay.git" />
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" id="downloadBtn" onclick="handleDownload()">
+                Download
+            </button>
+            <button class="btn-secondary" onclick="clearForm()">Clear</button>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="examples">
+            <h3>Supported URLs:</h3>
+            <div class="example-item">• GH repos: github.com/user/repo/blob/main/README.md</div>
+            <div class="example-item">• AUR repos: aur.archlinux.org/yay.git</div>
+            <div class="example-item">• Direct files: example.com/file.zip</div>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status show ${type}`;
+        }
+
+        function hideStatus() {
+            const status = document.getElementById('status');
+            status.className = 'status';
+        }
+
+        function clearForm() {
+            document.getElementById('urlInput').value = '';
+            hideStatus();
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('downloadBtn');
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loader"></span>Processing...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'Download';
+            }
+        }
+
+        function parseGitHubUrl(url) {
+            // Matches: github.com/user/repo/blob/branch/path/to/file
+            const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)\/blob\/([^\/]+)\/(.+)/);
+            if (match) {
+                return {
+                    user: match[1],
+                    repo: match[2],
+                    branch: match[3],
+                    path: match[4]
+                };
+            }
+            
+            // Matches: github.com/user/repo (for whole repo download)
+            const repoMatch = url.match(/github\.com\/([^\/]+)\/([^\/]+)\/?$/);
+            if (repoMatch) {
+                return {
+                    user: repoMatch[1],
+                    repo: repoMatch[2].replace('.git', ''),
+                    isFullRepo: true
+                };
+            }
+            
+            return null;
+        }
+
+        async function handleDownload() {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            
+            if (!urlInput) {
+                showStatus('Please enter a URL', 'error');
+                return;
+            }
+
+            try {
+                new URL(urlInput);
+            } catch (e) {
+                showStatus('Please enter a valid URL', 'error');
+                return;
+            }
+
+            setLoading(true);
+            hideStatus();
+
+            try {
+                // Check if it's a GitHub URL
+                if (urlInput.includes('github.com')) {
+                    await downloadFromGitHub(urlInput);
+                }
+                // Check if it's a .git URL
+                else if (urlInput.endsWith('.git')) {
+                    await downloadGitRepo(urlInput);
+                } 
+                // Direct file download
+                else {
+                    await downloadDirectFile(urlInput);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function downloadFromGitHub(url) {
+            const parsed = parseGitHubUrl(url);
+            
+            if (!parsed) {
+                showStatus('Invalid GH URL format', 'error');
+                return;
+            }
+
+            // If it's a full repo download
+            if (parsed.isFullRepo) {
+                showStatus('Downloading repository archive...', 'info');
+                // Use jsdelivr CDN as alternative to direct GH downloads
+                const downloadUrl = `https://cdn.jsdelivr.net/gh/${parsed.user}/${parsed.repo}@latest/archive.zip`;
+                window.location.href = downloadUrl;
+                showStatus('Download started!', 'success');
+                return;
+            }
+
+            showStatus('Fetching file from repository...', 'info');
+            
+            // Use jsdelivr CDN to fetch the raw file content
+            const rawUrl = `https://cdn.jsdelivr.net/gh/${parsed.user}/${parsed.repo}@${parsed.branch}/${parsed.path}`;
+            
+            try {
+                const response = await fetch(rawUrl);
+                if (!response.ok) {
+                    throw new Error('File not found or inaccessible');
+                }
+                
+                const blob = await response.blob();
+                const filename = parsed.path.split('/').pop();
+                
+                // Create download link
+                const a = document.createElement('a');
+                const objectUrl = URL.createObjectURL(blob);
+                a.href = objectUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(objectUrl);
+                
+                showStatus(`Downloaded: ${filename}`, 'success');
+            } catch (error) {
+                // Fallback: try raw.githubusercontent alternative via statically.io
+                const fallbackUrl = `https://cdn.statically.io/gh/${parsed.user}/${parsed.repo}/${parsed.branch}/${parsed.path}`;
+                const a = document.createElement('a');
+                a.href = fallbackUrl;
+                a.download = parsed.path.split('/').pop();
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                showStatus('Download initiated via alternative CDN', 'success');
+            }
+        }
+
+        async function downloadGitRepo(gitUrl) {
+            showStatus('Fetching repository information...', 'info');
+            
+            let downloadUrl = null;
+            
+            // Check for common git hosting services and construct download URLs
+            if (gitUrl.includes('aur.archlinux.org')) {
+                // AUR repositories - construct snapshot URL
+                const repoName = gitUrl.replace('.git', '').split('/').pop();
+                downloadUrl = `https://aur.archlinux.org/cgit/aur.git/snapshot/${repoName}.tar.gz`;
+            } else {
+                // For other git repos, try to use cgit or gitweb snapshot URLs
+                const baseUrl = gitUrl.replace('.git', '');
+                const repoName = baseUrl.split('/').pop();
+                
+                // Try various common patterns
+                const patterns = [
+                    `${baseUrl}/archive/master.tar.gz`,
+                    `${baseUrl}/archive/main.tar.gz`,
+                    `${baseUrl}/snapshot/${repoName}.tar.gz`,
+                    gitUrl
+                ];
+                
+                downloadUrl = patterns[0];
+            }
+
+            showStatus('Preparing download...', 'info');
+            
+            // Create a download link
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showStatus('Download started! Check your downloads folder.', 'success');
+        }
+
+        async function downloadDirectFile(url) {
+            showStatus('Preparing download...', 'info');
+            
+            // For direct file downloads
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showStatus('Download started! Check your downloads folder.', 'success');
+        }
+
+        // Allow Enter key to trigger download
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleDownload();
+            }
+        });
+    </script>
+</body>
+</html>

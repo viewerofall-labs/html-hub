@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIPHER OS v2.0</title>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            background: #020617;
+        }
+
+        /* Desktop View */
+        .desktop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: linear-gradient(to bottom right, #0f172a, #1e293b);
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* EXIT BUTTON - WHITE AT TOP */
+        .exit-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.95;
+            transition: all 0.2s;
+        }
+
+        .exit-button:hover {
+            opacity: 1;
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .desktop h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #22d3ee;
+            margin-bottom: 0.5rem;
+        }
+
+        .desktop .version {
+            font-size: 1.25rem;
+            color: #9ca3af;
+            margin-bottom: 0.25rem;
+        }
+
+        .desktop .level {
+            font-size: 1.125rem;
+            color: #67e8f9;
+            margin-bottom: 2rem;
+        }
+
+        .keys-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .keys-display .key-icon {
+            color: #fbbf24;
+        }
+
+        .keys-display .key-label {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .keys-list {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .key-badge {
+            padding: 0.25rem 0.5rem;
+            background: #d97706;
+            color: white;
+            font-size: 0.875rem;
+            border-radius: 0.25rem;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 28rem;
+        }
+
+        .app-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #334155;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: background-color 0.2s;
+        }
+
+        .app-button:hover {
+            background: #475569;
+        }
+
+        .level-complete {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #14532d;
+            border: 2px solid #22c55e;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .level-complete .title {
+            color: #86efac;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .level-complete .hint {
+            color: #bbf7d0;
+            font-size: 0.875rem;
+        }
+
+        /* Terminal View */
+        .terminal {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #000;
+        }
+
+        .window-header {
+            background: #1e293b;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #475569;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .window-title span {
+            color: white;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: white;
+            border: 1px solid white;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.1);
+        }
+
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .terminal-line {
+            color: #22c55e;
+            margin-bottom: 0.25rem;
+        }
+
+        .terminal-input-area {
+            padding: 1rem;
+            background: #0f172a;
+            border-top: 1px solid #475569;
+        }
+
+        .terminal-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-prompt {
+            color: #22c55e;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #22c55e;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        .terminal-footer {
+            padding: 0.5rem;
+            background: #1e293b;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            text-align: center;
+            border-top: 1px solid #475569;
+        }
+
+        /* File Explorer View */
+        .file-explorer {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #0f172a;
+        }
+
+        .location-bar {
+            padding: 1rem;
+            background: #1e293b;
+            border-bottom: 1px solid #475569;
+            color: #9ca3af;
+        }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .file-item {
+            width: 100%;
+            padding: 1rem;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .file-item:hover {
+            background: #334155;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-name.encrypted {
+            color: #f87171;
+        }
+
+        .file-name.decrypted {
+            color: #86efac;
+        }
+
+        .file-status {
+            color: #f87171;
+            font-size: 0.75rem;
+        }
+
+        /* Editor View */
+        .editor {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #0f172a;
+        }
+
+        .editor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .encrypted-placeholder {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .encrypted-placeholder .title {
+            color: #f87171;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .encrypted-placeholder .message {
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+        }
+
+        .encrypted-data {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #1e293b;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+        }
+
+        .encrypted-data .label {
+            color: #f87171;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .encrypted-data .data {
+            color: #9ca3af;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .file-content {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+        }
+
+        .file-content pre {
+            color: #86efac;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Decryptor View */
+        .decryptor {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #0f172a;
+        }
+
+        .keys-bar {
+            padding: 1rem;
+            background: #1e293b;
+            border-bottom: 1px solid #475569;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .keys-bar .label {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .decryptor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .software-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .software-card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .software-card:hover {
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+        }
+
+        .software-card.active {
+            border-color: #22c55e;
+            background: #14532d;
+        }
+
+
+        .software-icon {
+            margin-bottom: 1rem;
+            color: #60a5fa;
+        }
+
+        .software-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .software-hint {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+
+        .encrypted-files-section {
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            color: #22d3ee;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .encrypted-file-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-card-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-details .name {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-details .type {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .decrypt-btn {
+            padding: 0.5rem 1rem;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .decrypt-btn:hover {
+            background: #16a34a;
+        }
+
+        .decrypt-btn:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .no-encrypted {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .no-encrypted .message {
+            color: #22c55e;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .software-status {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #0f172a;
+            border-radius: 0.25rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .software-status.error {
+            color: #f87171;
+            background: #7f1d1d;
+        }
+
+        .software-status.success {
+            color: #86efac;
+            background: #14532d;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app-container"></div>
+
+    <script>
+        // Game state
+        let currentLevel = 1;
+        let currentApp = 'desktop';
+        let selectedFile = null;
+        let selectedSoftware = null;
+        let unlockedKeys = [];
+        let levelComplete = false;
+        let terminalBuffer = [];
+
+        // Decryption software - mix of real and decoys
+        const decryptionSoftware = [
+            {
+                id: 'base64-decoder',
+                name: 'StackDecoder Pro',
+                hint: 'Minecraft stack capacity',
+                type: 'base64',
+                isDecoy: false,
+                icon: 'package'
+            },
+            {
+                id: 'caesar-cracker',
+                name: 'ShiftCipher X',
+                hint: 'The empire that shifted history',
+                type: 'caesar',
+                isDecoy: false,
+                icon: 'shield'
+            },
+            {
+                id: 'rot13-tool',
+                name: 'RotateMaster',
+                hint: 'Half of the letters, twisted',
+                type: 'rot13',
+                isDecoy: false,
+                icon: 'rotate-cw'
+            },
+            {
+                id: 'hex-converter',
+                name: 'HexWizard',
+                hint: 'Witch\'s spell counting system',
+                type: 'hex',
+                isDecoy: false,
+                icon: 'hash'
+            },
+            {
+                id: 'atbash-decoder',
+                name: 'MirrorCipher',
+                hint: 'A becomes Z, Z becomes A',
+                type: 'atbash',
+                isDecoy: false,
+                icon: 'flip-horizontal'
+            },
+            {
+                id: 'binary-translator',
+                name: 'BinaryBridge',
+                hint: 'On or off, 1 or 0',
+                type: 'binary',
+                isDecoy: false,
+                icon: 'binary'
+            },
+            {
+                id: 'morse-decoder',
+                name: 'DotDashPro',
+                hint: 'Telegraph operator\'s language',
+                type: 'morse',
+                isDecoy: false,
+                icon: 'radio'
+            },
+            {
+                id: 'vigenere-breaker',
+                name: 'PolyAlphaCrack',
+                hint: 'French diplomat\'s polyalphabetic method',
+                type: 'vigenere',
+                isDecoy: false,
+                icon: 'book-key'
+            },
+            {
+                id: 'reverse-tool',
+                name: 'FlipScript',
+                hint: 'Reading backwards is the key',
+                type: 'reverse',
+                isDecoy: false,
+                icon: 'arrow-left-right'
+            },
+            {
+                id: 'railfence-decoder',
+                name: 'ZigZagDecrypt',
+                hint: 'Train tracks crossing patterns',
+                type: 'railfence',
+                isDecoy: false,
+                icon: 'layers'
+            },
+            {
+                id: 'substitution-cracker',
+                name: 'AlphaSwap Pro',
+                hint: 'Every letter has a partner',
+                type: 'substitution',
+                isDecoy: false,
+                icon: 'shuffle'
+            },
+            {
+                id: 'multi-layer-decoder',
+                name: 'OnionPeel Suite',
+                hint: 'Layer by layer, like an onion',
+                type: 'multi',
+                isDecoy: false,
+                icon: 'layers-3'
+            },
+            // DECOYS
+            {
+                id: 'quantum-decrypt',
+                name: 'Fourth of the first',
+                hint: 'Once, and twice to split',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'columns-4'
+            },
+            {
+                id: 'ai-breaker',
+                name: 'AI/ Last resort',
+                hint: 'Just put it in chatgpt man',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'cpu'
+            },
+            {
+                id: 'brute-force',
+                name: 'BruteForce',
+                hint: 'Try every combination',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'hammer'
+            },
+            {
+                id: 'backdoor-exploit',
+                name: 'Box in a box',
+                hint: 'Inside a mirror',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'flip-horizontal-2'
+            },
+            {
+                id: 'rainbow-table',
+                name: 'Upside down',
+                hint: 'What you eat on but upside down',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'squares-exclude'
+            },
+            {
+                id: 'dna-decoder',
+                name: 'Backend',
+                hint: 'Grab it from inside of the source',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'door-closed-locked'
+            },
+            {
+                id: 'blockchain-breaker',
+                name: 'ANTIDECOY',
+                hint: 'Not a decoy trust me man',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'x'
+            },
+            {
+                id: 'steganography-tool',
+                name: 'internal-pixels',
+                hint: 'Hidden pixels inside it',
+                type: 'decoy',
+                isDecoy: true,
+                icon: 'image'
+            }
+        ];
+
+        // Level configurations with more levels
+        const levels = {
+            1: {
+                mainFile: 'mission.txt',
+                environment: {
+                    'mission.txt': { 
+                        content: 'TWlzc2lvbjogRGVjcnlwdCBhbGwgZmlsZXMgdG8gcHJvZ3Jlc3MuIEtleTogU1RBQ0s=', 
+                        encrypted: true, 
+                        cipher: 'base64',
+                        decrypted: 'Mission: Decrypt all files to progress. Key: STACK'
+                    },
+                    'secret.txt': { 
+                        content: 'Wkh iluvw nhb lv klgghq lq wkh iroorzlqj phvvdjh: VKLCW', 
+                        encrypted: true, 
+                        cipher: 'caesar',
+                        shift: 3,
+                        decrypted: 'The first key is hidden in the following message: SHIFT'
+                    },
+                    'data.log': { 
+                        content: 'Guvf vf n grfg. Xrl sbhaq: GJVFG', 
+                        encrypted: true, 
+                        cipher: 'rot13',
+                        decrypted: 'This is a test. Key found: TWIST'
+                    }
+                },
+                requiredKeys: ['STACK', 'SHIFT', 'TWIST']
+            },
+            2: {
+                mainFile: 'orders.txt',
+                environment: {
+                    'orders.txt': { 
+                        content: '4e657874204c6576656c20556e6c6f636b65642e204b65793a204845584143', 
+                        encrypted: true, 
+                        cipher: 'hex',
+                        decrypted: 'Next Level Unlocked. Key: HEXAC'
+                    },
+                    'classified.txt': { 
+                        content: 'Gsv xlow dzmt rh hvxivg. Pvb: NRIILI', 
+                        encrypted: true, 
+                        cipher: 'atbash',
+                        decrypted: 'The cold wars is secret. Key: MIRROR'
+                    },
+                    'encrypted.dat': { 
+                        content: '01000010 01001001 01001110 01000001 01010010 01011001', 
+                        encrypted: true, 
+                        cipher: 'binary',
+                        decrypted: 'BINARY'
+                    },
+                    'transmission.log': { 
+                        content: '- --- .-. ... . / -.- . -.--', 
+                        encrypted: true, 
+                        cipher: 'morse',
+                        decrypted: 'MORSE KEY'
+                    }
+                },
+                requiredKeys: ['HEXAC', 'MIRROR', 'BINARY', 'MORSE']
+            },
+            3: {
+                mainFile: 'final_mission.txt',
+                environment: {
+                    'final_mission.txt': { 
+                        content: 'VGhlIGZpbmFsIGNoYWxsZW5nZSBhd2FpdHMuIEtleTogRklOQUw=', 
+                        encrypted: true, 
+                        cipher: 'base64',
+                        decrypted: 'The final challenge awaits. Key: FINAL'
+                    },
+                    'vault_access.txt': { 
+                        content: 'Wkh ydxow frgh lv: DFFHVV', 
+                        encrypted: true, 
+                        cipher: 'caesar',
+                        shift: 3,
+                        decrypted: 'The vault code is: ACCESS'
+                    },
+                    'system_core.dat': { 
+                        content: '436f6e6772617475206c6174696f6e73210a4b65793a20434f5245', 
+                        encrypted: true, 
+                        cipher: 'hex',
+                        decrypted: 'Congratulations!\nKey: CORE'
+                    },
+                    'master_key.enc': { 
+                        content: 'Blf szev hfxxvhhufool xolnkovgvw gsv xszoolmtv. Nzhgvi Pvb: NZHGVI', 
+                        encrypted: true, 
+                        cipher: 'atbash',
+                        decrypted: 'You have successfully completed the challenge. Master Key: MASTER'
+                    },
+                    'hidden.bin': { 
+                        content: '01010110 01001001 01000011 01010100 01001111 01010010 01011001', 
+                        encrypted: true, 
+                        cipher: 'binary',
+                        decrypted: 'VICTORY'
+                    }
+                },
+                requiredKeys: ['FINAL', 'ACCESS', 'CORE', 'MASTER', 'VICTORY']
+            },
+            4: {
+                mainFile: 'deep_vault.txt',
+                environment: {
+                    'deep_vault.txt': { 
+                        content: '01000100 01000101 01000101 01010000 01000101 01010010', 
+                        encrypted: true, 
+                        cipher: 'binary',
+                        decrypted: 'DEEPER'
+                    },
+                    'protocol_alpha.enc': { 
+                        content: '.- .-.. .--. .... .- / -.- . -.--', 
+                        encrypted: true, 
+                        cipher: 'morse',
+                        decrypted: 'ALPHA KEY'
+                    },
+                    'cipher_mix_1.dat': { 
+                        content: 'Wkh klgghq nhb lv: VHFUHW', 
+                        encrypted: true, 
+                        cipher: 'caesar',
+                        shift: 3,
+                        decrypted: 'The hidden key is: SECRET'
+                    },
+                    'hex_archive.txt': { 
+                        content: '50524f544f434f4c', 
+                        encrypted: true, 
+                        cipher: 'hex',
+                        decrypted: 'PROTOCOL'
+                    },
+                    'encoded_msg.log': { 
+                        content: 'Zmv xlwv rh: ZMFKO', 
+                        encrypted: true, 
+                        cipher: 'atbash',
+                        decrypted: 'The code is: ALPHA'
+                    },
+                    'stack_data.bin': { 
+                        content: 'S2V5OiBTVEFDS0VE', 
+                        encrypted: true, 
+                        cipher: 'base64',
+                        decrypted: 'Key: STACKED'
+                    }
+                },
+                requiredKeys: ['DEEPER', 'ALPHA', 'SECRET', 'PROTOCOL', 'STACKED']
+            },
+            5: {
+                mainFile: 'encrypted_vault.txt',
+                environment: {
+                    'encrypted_vault.txt': { 
+                        content: '01010101 01001100 01010100 01001001 01001101 01000001', 
+                        encrypted: true, 
+                        cipher: 'binary',
+                        decrypted: 'ULTIMA'
+                    },
+                    'layer_7.enc': { 
+                        content: '54686520736576656e7468206c617965722e204b65793a204c41594552', 
+                        encrypted: true, 
+                        cipher: 'hex',
+                        decrypted: 'The seventh layer. Key: LAYER'
+                    },
+                    'twisted_code.dat': { 
+                        content: 'Gur pbqr vf: GJVFGRQ', 
+                        encrypted: true, 
+                        cipher: 'rot13',
+                        decrypted: 'The code is: TWISTED'
+                    },
+                    'alpha_bravo.txt': { 
+                        content: '- .... . / -. . -..- - / -.- . -.-- / .. ... ---... / -... .-. .- ...- ---', 
+                        encrypted: true, 
+                        cipher: 'morse',
+                        decrypted: 'THE NEXT KEY IS: BRAVO'
+                    },
+                    'reverse_eng.log': { 
+                        content: 'Ivevihv vmtrmvvirmt xlnkovgv. Pvb: IVEVIHV', 
+                        encrypted: true, 
+                        cipher: 'atbash',
+                        decrypted: 'Reverse engineering complete. Key: REVERSE'
+                    },
+                    'advanced_enc.bin': { 
+                        content: 'Wkh ilqdo vwhs dssurdfkhv. Nhb: DGYDQFH', 
+                        encrypted: true, 
+                        cipher: 'caesar',
+                        shift: 3,
+                        decrypted: 'The final step approaches. Key: ADVANCE'
+                    },
+                    'stack_overflow.txt': { 
+                        content: 'RW5jcnlwdGlvbiBsZXZlbCA1IGNvbXBsZXRlLiBLZXk6IE9WRVJGTE9X', 
+                        encrypted: true, 
+                        cipher: 'base64',
+                        decrypted: 'Encryption level 5 complete. Key: OVERFLOW'
+                    }
+                },
+                requiredKeys: ['ULTIMA', 'LAYER', 'TWISTED', 'BRAVO', 'REVERSE', 'ADVANCE', 'OVERFLOW']
+            },
+            6: {
+                mainFile: 'ultimate_challenge.txt',
+                environment: {
+                    'ultimate_challenge.txt': { 
+                        content: '01010101 01001100 01010100 01001001 01001101 01000001 01010100 01000101', 
+                        encrypted: true, 
+                        cipher: 'binary',
+                        decrypted: 'ULTIMATE'
+                    },
+                    'final_protocol.enc': { 
+                        content: '..-. .. -. .- .-.. / .--. .-. --- - --- -.-. --- .-.. / -.- . -.--', 
+                        encrypted: true, 
+                        cipher: 'morse',
+                        decrypted: 'FINAL PROTOCOL KEY'
+                    },
+                    'omega_sequence.dat': { 
+                        content: 'Lnvtz hvjfvmxv zxgregvw. Pvb: LNVTZ', 
+                        encrypted: true, 
+                        cipher: 'atbash',
+                        decrypted: 'Omega sequence activated. Key: OMEGA'
+                    },
+                    'hex_final.bin': { 
+                        content: '4d415354455220434f44453a204d415354455232', 
+                        encrypted: true, 
+                        cipher: 'hex',
+                        decrypted: 'MASTER CODE: MASTER2'
+                    },
+                    'caesar_ultimate.txt': { 
+                        content: 'Wkh xowlpdwh flskhu. Nhb: FLSKHU', 
+                        encrypted: true, 
+                        cipher: 'caesar',
+                        shift: 3,
+                        decrypted: 'The ultimate cipher. Key: CIPHER'
+                    },
+                    'twisted_final.log': { 
+                        content: 'Svany purpxcbvag ernpurq. Xrl: PURPXCBVAG', 
+                        encrypted: true, 
+                        cipher: 'rot13',
+                        decrypted: 'Final checkpoint reached. Key: CHECKPOINT'
+                    },
+                    'base_end.enc': { 
+                        content: 'VGhlIGVuZCBpcyBuZWFyLiBLZXk6IEVORA==', 
+                        encrypted: true, 
+                        cipher: 'base64',
+                        decrypted: 'The end is near. Key: END'
+                    },
+                    'binary_victory.dat': { 
+                        content: '01010110 01001001 01000011 01010100 01001111 01010010 00110010', 
+                        encrypted: true, 
+                        cipher: 'binary',
+                        decrypted: 'VICTOR2'
+                    },
+                    'completion.txt': { 
+                        content: '-.-. --- -- .--. .-.. . - .. --- -. / -.- . -.--', 
+                        encrypted: true, 
+                        cipher: 'morse',
+                        decrypted: 'COMPLETION KEY'
+                    }
+                },
+                requiredKeys: ['ULTIMATE', 'PROTOCOL', 'OMEGA', 'MASTER2', 'CIPHER', 'CHECKPOINT', 'END', 'VICTOR2', 'COMPLETION']
+            }
+        };
+
+        let environment = {};
+
+        function init() {
+            loadLevel(currentLevel);
+            terminalBuffer = [
+                'CIPHER OS v0.5 - CLI',
+                'Type "help" for available commands',
+                ''
+            ];
+            render();
+        }
+
+        function loadLevel(level) {
+            const levelData = levels[level];
+            environment = JSON.parse(JSON.stringify(levelData.environment));
+            unlockedKeys = [];
+            levelComplete = false;
+            selectedFile = null;
+            selectedSoftware = null;
+        }
+
+        // Decryption functions
+        function decryptBase64(text) {
+            try {
+                return atob(text);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function decryptCaesar(text, shift = 3) {
+            return text.split('').map(char => {
+                if (char.match(/[a-z]/i)) {
+                    const code = char.charCodeAt(0);
+                    const isUpperCase = code >= 65 && code <= 90;
+                    const base = isUpperCase ? 65 : 97;
+                    return String.fromCharCode(((code - base - shift + 26) % 26) + base);
+                }
+                return char;
+            }).join('');
+        }
+
+        function decryptRot13(text) {
+            return decryptCaesar(text, 13);
+        }
+
+        function decryptHex(text) {
+            try {
+                return text.match(/.{1,2}/g).map(byte => String.fromCharCode(parseInt(byte, 16))).join('');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function decryptAtbash(text) {
+            return text.split('').map(char => {
+                if (char.match(/[a-z]/i)) {
+                    const code = char.charCodeAt(0);
+                    const isUpperCase = code >= 65 && code <= 90;
+                    const base = isUpperCase ? 65 : 97;
+                    return String.fromCharCode((25 - (code - base)) + base);
+                }
+                return char;
+            }).join('');
+        }
+
+        function decryptBinary(text) {
+            try {
+                return text.split(' ').map(binary => String.fromCharCode(parseInt(binary, 2))).join('');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function decryptMorse(text) {
+            const morseCode = {
+                '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+                '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+                '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+                '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+                '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+                '--..': 'Z', '/': ' '
+            };
+            try {
+                return text.split(' ').map(code => morseCode[code] || '').join('');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function decryptFile(filename) {
+            const file = environment[filename];
+            if (!file || !file.encrypted || !selectedSoftware) return;
+
+            const software = decryptionSoftware.find(s => s.id === selectedSoftware);
+            if (!software) return;
+
+            if (software.isDecoy) {
+                showSoftwareStatus('ERROR: CIPHER_OS 2.0 MISPRINT', 'error');
+                return;
+            }
+
+            if (file.cipher !== software.type) {
+                showSoftwareStatus('ERROR: Detection system noticed mismatch, incorrect cipher', 'error');
+                return;
+            }
+
+            let decrypted = null;
+            switch (software.type) {
+                case 'base64':
+                    decrypted = decryptBase64(file.content);
+                    break;
+                case 'caesar':
+                    decrypted = decryptCaesar(file.content, file.shift || 3);
+                    break;
+                case 'rot13':
+                    decrypted = decryptRot13(file.content);
+                    break;
+                case 'hex':
+                    decrypted = decryptHex(file.content);
+                    break;
+                case 'atbash':
+                    decrypted = decryptAtbash(file.content);
+                    break;
+                case 'binary':
+                    decrypted = decryptBinary(file.content);
+                    break;
+                case 'morse':
+                    decrypted = decryptMorse(file.content);
+                    break;
+            }
+
+            if (decrypted) {
+                file.content = decrypted;
+                file.encrypted = false;
+                
+                // Extract keys from decrypted content
+                const keyMatch = decrypted.match(/Key[:\s]+([A-Z]+)/i);
+                if (keyMatch && !unlockedKeys.includes(keyMatch[1])) {
+                    unlockedKeys.push(keyMatch[1]);
+                }
+
+                showSoftwareStatus('SUCCESS: File decrypted!', 'success');
+                
+                // Check if level complete
+                const allDecrypted = Object.values(environment).every(f => !f.encrypted);
+                if (allDecrypted) {
+                    levelComplete = true;
+                }
+                
+                setTimeout(() => render(), 1000);
+            }
+        }
+
+        function showSoftwareStatus(message, type) {
+            const statusDiv = document.getElementById('softwareStatus');
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                statusDiv.className = `software-status ${type}`;
+                statusDiv.classList.remove('hidden');
+            }
+        }
+
+        function selectSoftware(softwareId) {
+            selectedSoftware = softwareId;
+            render();
+        }
+
+        function executeTerminalCommand(cmd) {
+            terminalBuffer.push(`> ${cmd}`);
+            
+            const parts = cmd.trim().split(/\s+/);
+            const command = parts[0].toLowerCase();
+            
+            switch (command) {
+                case 'help':
+                    terminalBuffer.push('Available commands:');
+                    terminalBuffer.push('  scan - Scan for encrypted files');
+                    terminalBuffer.push('  list - List all files');
+                    terminalBuffer.push('  clear - Clear terminal');
+                    terminalBuffer.push('  advance <file> <key> - Advance to next level');
+                    terminalBuffer.push('');
+                    break;
+                    
+                case 'scan':
+                    terminalBuffer.push('Scanning for encrypted files...');
+                    Object.entries(environment).forEach(([filename, file]) => {
+                        if (file.encrypted) {
+                            terminalBuffer.push(`  [ENCRYPTED] ${filename} - Type: ${file.cipher}`);
+                        } else {
+                            terminalBuffer.push(`  [DECRYPTED] ${filename}`);
+                        }
+                    });
+                    terminalBuffer.push('');
+                    break;
+                    
+                case 'list':
+                    terminalBuffer.push('Files:');
+                    Object.keys(environment).forEach(filename => {
+                        terminalBuffer.push(`  ${filename}`);
+                    });
+                    terminalBuffer.push('');
+                    break;
+                    
+                case 'clear':
+                    terminalBuffer = [];
+                    break;
+                    
+                case 'advance':
+                    if (parts.length < 3) {
+                        terminalBuffer.push('ERROR: Usage: advance <file> <key>');
+                        terminalBuffer.push('');
+                        break;
+                    }
+                    
+                    const filename = parts[1];
+                    const key = parts[2].toUpperCase();
+                    const levelData = levels[currentLevel];
+                    
+                    if (filename !== levelData.mainFile) {
+                        terminalBuffer.push(`ERROR: ${filename} is not the main file`);
+                        terminalBuffer.push(`HINT: Try ${levelData.mainFile}`);
+                        terminalBuffer.push('');
+                        break;
+                    }
+                    
+                    if (!levelData.requiredKeys.includes(key)) {
+                        terminalBuffer.push('ERROR: Invalid key');
+                        terminalBuffer.push('');
+                        break;
+                    }
+                    
+                    if (!unlockedKeys.includes(key)) {
+                        terminalBuffer.push('ERROR: Key not yet unlocked');
+                        terminalBuffer.push('HINT: Decrypt all files to find keys');
+                        terminalBuffer.push('');
+                        break;
+                    }
+                    
+                    const allDecrypted = Object.values(environment).every(f => !f.encrypted);
+                    if (!allDecrypted) {
+                        terminalBuffer.push('ERROR: Not all files decrypted');
+                        terminalBuffer.push('');
+                        break;
+                    }
+                    
+                    if (currentLevel < 6) {
+                        currentLevel++;
+                        loadLevel(currentLevel);
+                        terminalBuffer.push(`SUCCESS: Advanced to Level ${currentLevel}`);
+                        terminalBuffer.push('');
+                    } else {
+                        terminalBuffer.push('=================================');
+                        terminalBuffer.push('CONGRATULATIONS!');
+                        terminalBuffer.push('You have completed all levels!');
+                        terminalBuffer.push('=================================');
+                        terminalBuffer.push('');
+                    }
+                    break;
+                    
+                default:
+                    terminalBuffer.push(`ERROR: Unknown command: ${command}`);
+                    terminalBuffer.push('Type "help" for available commands');
+                    terminalBuffer.push('');
+            }
+            
+            render();
+        }
+
+        function openFile(filename) {
+            selectedFile = filename;
+            currentApp = 'editor';
+            render();
+        }
+
+        function renderDesktop() {
+            const html = `
+                <div class="desktop">
+                    <button class="exit-button" onclick="if(confirm('Exit CIPHER OS?')) window.close();">EXIT</button>
+                    
+                    <h1>CIPHER OS</h1>
+                    <p class="version">Version 2.0</p>
+                    <p class="level">Level ${currentLevel} / 6</p>
+                    
+                    <div class="keys-display">
+                        <i data-lucide="key" class="key-icon"></i>
+                        <span class="key-label">Keys:</span>
+                        <div class="keys-list">
+                            ${unlockedKeys.length > 0 
+                                ? unlockedKeys.map(key => `<span class="key-badge">${key}</span>`).join('') 
+                                : '<span style="color: #9ca3af;">None</span>'}
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="app-button" onclick="openApp('terminal')">
+                            <i data-lucide="terminal"></i>
+                            Terminal
+                        </button>
+                        <button class="app-button" onclick="openApp('explorer')">
+                            <i data-lucide="folder"></i>
+                            File Explorer
+                        </button>
+                        <button class="app-button" onclick="openApp('decryptor')">
+                            <i data-lucide="unlock"></i>
+                            Decryptor Suite
+                        </button>
+                    </div>
+                    
+                    ${levelComplete && currentLevel < 6 ? `
+                        <div class="level-complete">
+                            <p class="title">✓ LEVEL COMPLETE!</p>
+                            <p class="hint">Use Terminal to advance: advance ${levels[currentLevel].mainFile} &lt;key&gt;</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${levelComplete && currentLevel === 6 ? `
+                        <div class="level-complete">
+                            <p class="title">🎉 ALL LEVELS COMPLETE! 🎉</p>
+                            <p class="hint">Congratulations, master hacker!</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            return html;
+        }
+
+        function renderTerminal() {
+            const html = `
+                <div class="terminal">
+                    <div class="window-header">
+                        <div class="window-title">
+                            <i data-lucide="terminal" style="color: #22d3ee;"></i>
+                            <span>TERMINAL</span>
+                        </div>
+                        <button class="close-btn" onclick="openApp('desktop')">
+                            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="terminal-output">
+                        ${terminalBuffer.map(line => `<div class="terminal-line">${line}</div>`).join('')}
+                    </div>
+                    
+                    <div class="terminal-input-area">
+                        <div class="terminal-input-wrapper">
+                            <span class="terminal-prompt">></span>
+                            <input type="text" class="terminal-input" id="terminalInput" autofocus>
+                        </div>
+                    </div>
+                    
+                    <div class="terminal-footer">
+                        Commands: scan, list, clear, advance &lt;file&gt; &lt;key&gt;, help
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        function renderFileExplorer() {
+            const files = Object.entries(environment);
+            const html = `
+                <div class="file-explorer">
+                    <div class="window-header">
+                        <div class="window-title">
+                            <i data-lucide="folder" style="color: #60a5fa;"></i>
+                            <span>FILE EXPLORER</span>
+                        </div>
+                        <button class="close-btn" onclick="openApp('desktop')">
+                            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="location-bar">
+                        <p>Location: /home/user/documents/level${currentLevel}</p>
+                    </div>
+                    
+                    <div class="file-list">
+                        ${files.map(([filename, file]) => `
+                            <button class="file-item" onclick="openFile('${filename}')">
+                                <i data-lucide="${file.encrypted ? 'lock' : 'file-text'}" 
+                                   style="color: ${file.encrypted ? '#f87171' : '#60a5fa'}; width: 24px; height: 24px;"></i>
+                                <div class="file-info">
+                                    <p class="file-name ${file.encrypted ? 'encrypted' : 'decrypted'}">${filename}</p>
+                                    ${file.encrypted ? '<p class="file-status">ENCRYPTED</p>' : ''}
+                                </div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        function renderEditor() {
+            const file = environment[selectedFile];
+            const html = `
+                <div class="editor">
+                    <div class="window-header">
+                        <div class="window-title">
+                            <i data-lucide="file-text" style="color: #60a5fa;"></i>
+                            <span>EDITOR - ${selectedFile}</span>
+                        </div>
+                        <button class="close-btn" onclick="openApp('explorer')">
+                            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="editor-content">
+                        ${file.encrypted ? `
+                            <div class="encrypted-placeholder">
+                                <i data-lucide="lock" style="width: 64px; height: 64px; color: #f87171; margin: 0 auto 1rem; display: block;"></i>
+                                <p class="title">ENCRYPTED FILE</p>
+                                <p class="message">Encrypted data, print failure.</p>
+                                <p class="message">Use the Decryptor Suite to decrypt it.</p>
+                                <div class="encrypted-data">
+                                    <p class="label">Encrypted Data:</p>
+                                    <p class="data">${file.content}</p>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="file-content">
+                                <pre>${file.content}</pre>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        function renderDecryptor() {
+            const encryptedFiles = Object.entries(environment).filter(([_, file]) => file.encrypted);
+            const html = `
+                <div class="decryptor">
+                    <div class="window-header">
+                        <div class="window-title">
+                            <i data-lucide="unlock" style="color: #22c55e;"></i>
+                            <span>DECRYPTOR SUITE</span>
+                        </div>
+                        <button class="close-btn" onclick="openApp('desktop')">
+                            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="keys-bar">
+                        <i data-lucide="key" style="color: #fbbf24; width: 20px; height: 20px;"></i>
+                        <span class="label">Available Keys: ${unlockedKeys.length}</span>
+                        <div class="keys-list">
+                            ${unlockedKeys.map(key => `<span class="key-badge">${key}</span>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="decryptor-content">
+                        <h2 class="section-title">Select Decryption Software</h2>
+                        <p style="color: #9ca3af; margin-bottom: 1rem; font-size: 0.875rem;">
+                            Choose the correct software based on the hint. Some software may be decoys!
+                        </p>
+                        
+                        <div class="software-grid">
+                            ${decryptionSoftware.map(software => `
+                                <div class="software-card ${selectedSoftware === software.id ? 'active' : ''} ${software.isDecoy ? 'decoy' : ''}"
+                                     onclick="selectSoftware('${software.id}')">
+                                    <i data-lucide="${software.icon}" class="software-icon" style="width: 32px; height: 32px;"></i>
+                                    <div class="software-name">${software.name}</div>
+                                    <div class="software-hint">"${software.hint}"</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div id="softwareStatus" class="software-status hidden"></div>
+                        
+                        ${encryptedFiles.length === 0 ? `
+                            <div class="no-encrypted">
+                                <i data-lucide="unlock" style="width: 64px; height: 64px; color: #22c55e; margin: 0 auto 1rem; display: block;"></i>
+                                <p class="message">All files decrypted!</p>
+                            </div>
+                        ` : `
+                            <div class="encrypted-files-section">
+                                <h2 class="section-title">Encrypted Files</h2>
+                                ${encryptedFiles.map(([filename, file]) => `
+                                    <div class="encrypted-file-card">
+                                        <div class="file-card-info">
+                                            <i data-lucide="lock" style="color: #f87171; width: 24px; height: 24px;"></i>
+                                            <div class="file-details">
+                                                <p class="name">${filename}</p>
+                                                <p class="type">Encryption: ${file.cipher.toUpperCase()}</p>
+                                            </div>
+                                        </div>
+                                        <button class="decrypt-btn" onclick="decryptFile('${filename}')" ${!selectedSoftware ? 'disabled' : ''}>
+                                            <i data-lucide="unlock" style="width: 16px; height: 16px;"></i>
+                                            Decrypt
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            let content = '';
+            switch (currentApp) {
+                case 'desktop':
+                    content = renderDesktop();
+                    break;
+                case 'terminal':
+                    content = renderTerminal();
+                    break;
+                case 'explorer':
+                    content = renderFileExplorer();
+                    break;
+                case 'editor':
+                    content = renderEditor();
+                    break;
+                case 'decryptor':
+                    content = renderDecryptor();
+                    break;
+            }
+            
+            app.innerHTML = content;
+            
+            // Initialize Lucide icons
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+            
+            // Setup terminal input handler
+            if (currentApp === 'terminal') {
+                const input = document.getElementById('terminalInput');
+                if (input) {
+                    input.focus();
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            const cmd = input.value;
+                            if (cmd.trim()) {
+                                executeTerminalCommand(cmd);
+                                input.value = '';
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        function openApp(app) {
+            currentApp = app;
+            render();
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

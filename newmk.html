@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>2D Racing Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #000;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #000;
+    }
+    /* Overlay styles for the menu and finish screens */
+    #menu,
+    #finishScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1300px;
+      height: 700px;
+      background: rgba(0,0,0,0.85);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    #colorOptions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .color-button {
+      width: 100px;
+      height: 50px;
+      margin: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    #leaderboard {
+      margin: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+    .button {
+      padding: 10px 20px;
+      background: #444;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Canvas for game rendering -->
+  <canvas id="gameCanvas" width="1920" height="1080"></canvas>
+
+  <!-- Start menu overlay -->
+  <div id="menu">
+    <h1>Choose Your Kart Color</h1>
+    <div id="colorOptions">
+      <button class="color-button" style="background: rgb(255, 0, 0);" data-color="255,0,0">Red</button>
+      <button class="color-button" style="background: rgb(0, 0, 255);" data-color="0,0,255">Blue</button>
+      <button class="color-button" style="background: rgb(0, 255, 0);" data-color="0,255,0">Green</button>
+      <button class="color-button" style="background: rgb(255, 255, 0);" data-color="255,255,0">Yellow</button>
+    </div>
+  </div>
+
+  <!-- Finish/leaderboard overlay -->
+  <div id="finishScreen" style="display: none;">
+    <h1>Leaderboard</h1>
+    <div id="leaderboard"></div>
+    <button id="refreshButton" class="button">Refresh</button>
+  </div>
+
+  <script>
+    /* === Global Variables & Canvas Setup === */
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const canvasWidth = canvas.width, canvasHeight = canvas.height;
+    let gameState = "menu"; // States: "menu", "race", "finish"
+    let chosenColor = null;
+    let player = null;
+    let bots = [];
+    let obstacles = [];
+    const finishLineX = 3000; // x-coordinate of the finish line
+    let offsetX = 0; // Camera offset
+
+    // Background image for the track.
+    const background = new Image();
+    background.src = "track_background.png";
+    let backgroundLoaded = false;
+    background.onload = () => { backgroundLoaded = true; };
+
+    // List of possible bot names.
+    const possibleBotNames = ["Flash", "Bolt", "Speedy", "Turbo", "Nitro", "Blaze", "Phantom", "RacerX", "Zoom", "Vortex"];
+
+    // Time tracking variable.
+    let raceStartTime = 0;
+
+    // Key tracking for WASD.
+    let keysPressed = {};
+    window.addEventListener("keydown", e => { keysPressed[e.key] = true; });
+    window.addEventListener("keyup", e => { keysPressed[e.key] = false; });
+
+    /* === Class Definitions === */
+    class Car {
+      constructor(name, color, x, y, isPlayer = false, speed = 250) {
+        this.name = name;
+        this.color = color; // Expected in "rgb(r, g, b)" format.
+        this.x = x;
+        this.y = y;
+        this.width = 40;
+        this.height = 20;
+        this.isPlayer = isPlayer;
+        this.baseSpeed = speed;
+        this.slowTimer = 0;      // in milliseconds
+        this.finishTime = null;
+        this.finished = false;
+      }
+
+      update(dt) {
+        // Reduce slowdown timer if active.
+        if (this.slowTimer > 0) {
+          this.slowTimer -= dt * 1000;
+          if (this.slowTimer < 0) this.slowTimer = 0;
+        }
+        const effectiveSpeed = (this.slowTimer > 0) ? this.baseSpeed * 0.5 : this.baseSpeed;
+
+        if (this.isPlayer) {
+          // WASD Controls.
+          if (keysPressed["d"] || keysPressed["D"]) this.x += effectiveSpeed * dt;
+          if (keysPressed["a"] || keysPressed["A"]) this.x -= effectiveSpeed * dt;
+          if (keysPressed["w"] || keysPressed["W"]) this.y -= effectiveSpeed * dt;
+          if (keysPressed["s"] || keysPressed["S"]) this.y += effectiveSpeed * dt;
+        } else {
+          // Bots automatically move to the right.
+          this.x += effectiveSpeed * dt;
+        }
+
+        // Check collision with obstacles (only if not already slowed).
+        if (this.slowTimer <= 0) {
+          obstacles.forEach(obs => {
+            if (
+              this.x < obs.x + obs.width &&
+              this.x + this.width > obs.x &&
+              this.y < obs.y + obs.height &&
+              this.y + this.height > obs.y
+            ) {
+              this.slowTimer = 2000; // Set slowdown for 2 seconds.
+            }
+          });
+        }
+      }
+
+      draw(ctx) {
+        // Draw the car as a rectangle adjusted by camera offset.
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - offsetX, this.y, this.width, this.height);
+        // Draw the nametag above the car.
+        ctx.fillStyle = "white";
+        ctx.font = "14px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(this.name, this.x - offsetX, this.y - 5);
+      }
+    }
+
+    class Obstacle {
+      constructor(x, y, width = 40, height = 40) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+      }
+
+      draw(ctx) {
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x - offsetX, this.y, this.width, this.height);
+      }
+    }
+
+    // Draw the finish line as a vertical white stripe.
+    function drawFinishLine(ctx) {
+      ctx.fillStyle = "white";
+      ctx.fillRect(finishLineX - offsetX, 0, 10, canvasHeight);
+    }
+
+    /* === Game Setup === */
+    // Initialize race variables including player, bots, and obstacles.
+    function initRace() {
+      let lanes = [];
+      // Create 9 vertical positions (lanes).
+      for (let i = 0; i < 9; i++) {
+        lanes.push((i + 1) * canvasHeight / 10);
+      }
+      // The player's lane (choose middle lane; index 4).
+      let playerY = lanes[4];
+      player = new Car("Player", "rgb(" + chosenColor + ")", 50, playerY, true, 250);
+
+      // For bots, use the remaining lanes.
+      let botLanes = lanes.slice(0, 4).concat(lanes.slice(5));
+      // Shuffle bot lanes.
+      botLanes.sort(() => Math.random() - 0.5);
+      bots = [];
+      for (let i = 0; i < 8; i++) {
+        let botName = possibleBotNames[Math.floor(Math.random() * possibleBotNames.length)];
+        let botSpeed = 230 + Math.random() * 40; // Random speed between 230 and 270.
+        let randomColor = "rgb(" + 
+                          Math.floor(Math.random() * 256) + "," +
+                          Math.floor(Math.random() * 256) + "," +
+                          Math.floor(Math.random() * 256) + ")";
+        bots.push(new Car(botName, randomColor, 50, botLanes[i], false, botSpeed));
+      }
+
+      // Generate 20 obstacles randomly placed across the track.
+      obstacles = [];
+      for (let i = 0; i < 20; i++) {
+        let x = 300 + Math.random() * (finishLineX - 400);
+        let y = Math.random() * (canvasHeight - 40);
+        obstacles.push(new Obstacle(x, y));
+      }
+      raceStartTime = performance.now();
+    }
+
+    /* === Main Game Loop === */
+    let lastTime = performance.now();
+    function gameLoop() {
+      let now = performance.now();
+      let dt = (now - lastTime) / 1000; // Delta time in seconds.
+      lastTime = now;
+
+      if (gameState === "race") {
+        // Update the main player and bots.
+        player.update(dt);
+        bots.forEach(bot => bot.update(dt));
+
+        // Check if the player has crossed the finish line.
+        if (!player.finished && (player.x + player.width >= finishLineX)) {
+          player.finished = true;
+          player.finishTime = (now - raceStartTime) / 1000;
+          // Also set finish times for bots that have crossed.
+          bots.forEach(bot => {
+            if (!bot.finished && (bot.x + bot.width >= finishLineX)) {
+              bot.finished = true;
+              bot.finishTime = (now - raceStartTime) / 1000;
+            }
+          });
+          gameState = "finish";
+          showFinishScreen();
+        }
+
+        // If any bot hasn’t been marked finished but passes finish, record their finish times.
+        bots.forEach(bot => {
+          if (!bot.finished && bot.x + bot.width >= finishLineX) {
+            bot.finished = true;
+            bot.finishTime = (now - raceStartTime) / 1000;
+          }
+        });
+
+        // Camera offset: make the view follow the player.
+        offsetX = player.x - 100;
+        if (offsetX < 0) offsetX = 0;
+
+        // Draw the race scene.
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        if (backgroundLoaded) {
+          // Draw from the background image (assumes the image is wide enough).
+          ctx.drawImage(background, offsetX, 0, canvasWidth, canvasHeight, 0, 0, canvasWidth, canvasHeight);
+        } else {
+          // If the background image isn’t loaded, fill with a green color.
+          ctx.fillStyle = "green";
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+        drawFinishLine(ctx);
+        obstacles.forEach(obs => obs.draw(ctx));
+        bots.forEach(bot => bot.draw(ctx));
+        player.draw(ctx);
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* === Finish Screen Handling === */
+    function showFinishScreen() {
+      const finishScreen = document.getElementById("finishScreen");
+      finishScreen.style.display = "flex";
+      const leaderboard = document.getElementById("leaderboard");
+
+      // Get bots that finished ahead of the player.
+      let botsAhead = bots.filter(bot => bot.finishTime != null && bot.finishTime < player.finishTime);
+      botsAhead.sort((a, b) => a.finishTime - b.finishTime);
+
+      let html = "";
+      let rank = 1;
+      botsAhead.forEach(bot => {
+        html += `<div>${rank}. ${bot.name} - ${bot.finishTime.toFixed(2)}s</div>`;
+        rank++;
+      });
+      html += `<div>Player - ${player.finishTime.toFixed(2)}s</div>`;
+      leaderboard.innerHTML = html;
+    }
+
+    /* === DOM Events for Menu & Refresh === */
+    // Handle clicking a color button on the start menu.
+    document.querySelectorAll(".color-button").forEach(button => {
+      button.addEventListener("click", function () {
+        chosenColor = button.getAttribute("data-color");
+        initRace();
+        gameState = "race";
+        document.getElementById("menu").style.display = "none";
+      });
+    });
+
+    // Handle refresh button on the finish screen.
+    document.getElementById("refreshButton").addEventListener("click", function () {
+      gameState = "menu";
+      document.getElementById("menu").style.display = "flex";
+      document.getElementById("finishScreen").style.display = "none";
+    });
+
+    /* === Start the Game Loop === */
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

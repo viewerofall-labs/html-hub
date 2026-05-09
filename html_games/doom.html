@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>CCESS - DOOM PAYLOAD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="On this site you can play in DOOM in browser">
+    <meta name="keywords" content="DOOM">
+    <meta name="author" content="caiiiycuk">
+
+    <!-- Le styles -->
+    <link href="https://js-dos.com/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://js-dos.com/assets/css/bootstrap-responsive.min.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://js-dos.com/assets/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="data:image/png;base64,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">
+
+    <style type="text/css">
+      div.emscripten, .emscripten-status, .emscripten-padding {
+        padding-top: 20px;
+        padding-left: 20px;
+      }
+
+      .fullscreen {
+        display: none;
+        margin-top: 20px;
+        margin-left: 20px;
+      }
+
+      .emscripten canvas {
+        border: 0;
+        
+      }
+    </style>
+  </head>
+  
+  <body data-spy="scroll" data-target=".bs-docs-sidebar" style="visibility: hidden;text-align:center;">
+    <div class="emscripten-status" >
+<div style="text-align:left;width:830px; margin:0 auto;">
+<pre style="font-size: 1.5vw;color:#67CC00;line-height:1.5vw">
+
+            -.`                                                                      `.-            
+            yccess+/:-.`                                                    `.-:/+ccessy           
+            :MMMMMMMMNccess+:-.``                                  `..-:+ccessNMMMMMMMM:            
+             cMMMMMMMMMMMMMMMNNccess/:-.`                 ``.-:+ccessNMMMMMMMMMMMMMMMMm             
+             +MMMMMMMMMMMMMMMMMMMMMMMMNess+              essNMMMMMMMMMMMMMMMMMMMMMMMMM+             
+             `NMMMMMMccessNMMMMMMMMMMMMMMMN`            /MMMMMMMMMMMMMMMNNccessMMMMMMN`             
+              cMMMMMMe  `.--/+ccessNMMMMMMMs            cMMMMMMNNccess+:-.`   cMMMMMMs              
+              .MMMMMMs           `.-/MMMMMMN`          /MMMMMMd:-.`          `NMMMMMM.              
+               cMMMMMM-              yMMMMMMs         `cMMMMMM:              /MMMMMMy               
+               :MMMMMMs              .NMMMMMN`        +MMMMMMd               hMMMMMM-               
+                +ccesNs               sMMMMMMs       `cMMMMMM:              `NNcess/                
+                     `.               .NMMMMMN`      +MMMMMMh               ``                      
+                                       cNNMMMMs     `NMMMMNN-                                       
+                                        `.:/cce`    :ss+/-.`                                        
+                -cce+/-.`                                                  `.-/cess.                
+                 mMMMMMMMcces+/-.`                                `.:/ccesNMMMMMMMs                 
+                 +MMMMMMMMMMMMMMMMNy                            yNMMMMMMMMMMMMMMMM:                 
+                 `NMMMMMMMMMMMMMMMMM.                          .MMMMMMMMMMMMMMMMMs                  
+                  cMMMMMMMeMMMMMMMMMs                          sMMMMMMMNmdMMMMMMM/                  
+                  .MMMMMMM-`.-:/ccess                          cce+/-.`` /MMMMMMN`                  
+                   cMMMMMMs                                              dMMMMMMs                   
+                   :MMMMMMN`                                            :MMMMMMN`                   
+                    mMMMMMM+                                            hMMMMMMs                    
+                    +MMMMMMs                                           -MMMMMMM.                    
+                    `NMMMMMM:                                          yMMMMMMh                     
+                     sMMMMMMs                                         .NMMMMMM:                     
+                     .MMMMMMM-`                                     `-sMMMMMMd                      
+                      hMMMMMMNcces/:-.`                     `.-/+cessNMMMMMMM/                      
+                      :MMMMMMMMMMMMMNcce/                 .ssNMMMMMMMMMMMMMMs`                      
+                       cNMMMMMMMMMMMMMMMs                 yMMMMMMMMMMMMMMNNm+                       
+                       `.-/+ccesNNMMMMMMM:               .NMMMMMMNNcess+:-.`                        
+                               `.-:+ccess.               ccesss+:-.`                                
+                                       `..               ..`                                        
+</pre>
+</div>
+      Starting MS-DOS...<br/>
+      MS-DOS Version 6.22<br/><br/>
+      <p id="error"></p>
+      <p id="status">Downloading data...</p>
+      <p id="progress">Progress...</p>
+    </div>
+
+    <div class="emscripten">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    </div>
+    <div class="fullscreen">
+      <a id="fullscreen" href="javascript:void(0);">Fullscreen</a><br/><br/>
+    </div>
+
+    <div class="emscripten-padding">
+      <div style="text-align:left;width:830px; margin:0 auto;">
+<pre style="font-size: 1.5vw;color:#67CC00;line-height:1.5vw">
+
+            -.`                                                                      `.-            
+            yccess+/:-.`                                                    `.-:/+ccessy           
+            :MMMMMMMMNccess+:-.``                                  `..-:+ccessNMMMMMMMM:            
+             cMMMMMMMMMMMMMMMNNccess/:-.`                 ``.-:+ccessNMMMMMMMMMMMMMMMMm             
+             +MMMMMMMMMMMMMMMMMMMMMMMMNess+              essNMMMMMMMMMMMMMMMMMMMMMMMMM+             
+             `NMMMMMMccessNMMMMMMMMMMMMMMMN`            /MMMMMMMMMMMMMMMNNccessMMMMMMN`             
+              cMMMMMMe  `.--/+ccessNMMMMMMMs            cMMMMMMNNccess+:-.`   cMMMMMMs              
+              .MMMMMMs           `.-/MMMMMMN`          /MMMMMMd:-.`          `NMMMMMM.              
+               cMMMMMM-              yMMMMMMs         `cMMMMMM:              /MMMMMMy               
+               :MMMMMMs              .NMMMMMN`        +MMMMMMd               hMMMMMM-               
+                +ccesNs               sMMMMMMs       `cMMMMMM:              `NNcess/                
+                     `.               .NMMMMMN`      +MMMMMMh               ``                      
+                                       cNNMMMMs     `NMMMMNN-                                       
+                                        `.:/cce`    :ss+/-.`                                        
+                -cce+/-.`                                                  `.-/cess.                
+                 mMMMMMMMcces+/-.`                                `.:/ccesNMMMMMMMs                 
+                 +MMMMMMMMMMMMMMMMNy                            yNMMMMMMMMMMMMMMMM:                 
+                 `NMMMMMMMMMMMMMMMMM.                          .MMMMMMMMMMMMMMMMMs                  
+                  cMMMMMMMeMMMMMMMMMs                          sMMMMMMMNmdMMMMMMM/                  
+                  .MMMMMMM-`.-:/ccess                          cce+/-.`` /MMMMMMN`                  
+                   cMMMMMMs                                              dMMMMMMs                   
+                   :MMMMMMN`                                            :MMMMMMN`                   
+                    mMMMMMM+                                            hMMMMMMs                    
+                    +MMMMMMs                                           -MMMMMMM.                    
+                    `NMMMMMM:                                          yMMMMMMh                     
+                     sMMMMMMs                                         .NMMMMMM:                     
+                     .MMMMMMM-`                                     `-sMMMMMMd                      
+                      hMMMMMMNcces/:-.`                     `.-/+cessNMMMMMMM/                      
+                      :MMMMMMMMMMMMMNcce/                 .ssNMMMMMMMMMMMMMMs`                      
+                       cNMMMMMMMMMMMMMMMs                 yMMMMMMMMMMMMMMNNm+                       
+                       `.-/+ccesNNMMMMMMM:               .NMMMMMMNNcess+:-.`                        
+                               `.-:+ccess.               ccesss+:-.`                                
+                                       `..               ..`                                        
+</pre>
+    </div>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://js-dos.com/assets/js/jquery-1.11.2.min.js"></script>
+    <script src="https://js-dos.com/assets/js/bootstrap.min.js" defer></script>
+
+    <script type='text/javascript'>
+      var statusElement = document.getElementById('status');
+      var progressElement = document.getElementById('progress');
+
+      var Module = {
+        noImageDecoding: true,
+        preRun: [],
+        postRun: [],
+        print: (function() {
+          var element = document.getElementById('output');
+          if (element) element.value = ''; // clear browser cache
+          return function(text) {
+            text = Array.prototype.slice.call(arguments).join(' ');
+            console.log(text);
+            if (element) {
+              element.value += text + "\n";
+              element.scrollTop = element.scrollHeight; // focus on bottom
+            }
+          };
+        })(),
+        printErr: function(text) {
+          text = Array.prototype.slice.call(arguments).join(' ');
+          if (0) { // XXX disabled for safety typeof dump == 'function') {
+            dump(text + '\n'); // fast, straight to the real console
+          } else {
+            console.error(text);
+          }
+        },
+        canvas: (function() {
+          var canvas = document.getElementById('canvas');
+
+          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+          // application robust, you may want to override this behavior before shipping!
+          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+
+          return canvas;
+        })(),
+        setStatus: function(text) {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          //if (m && now - Date.now() < 30) return; // if this is a progress update, skip it if too soon
+          if (m) {
+            text = m[1];
+            progressElement.innerHTML = "Progress " + Math.round(parseInt(m[2]) / parseInt(m[4]) * 100) + "%";
+            progressElement.hidden = false;
+          } else {
+            progressElement.hidden = true;
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+
+          if (left == 0) {
+            $('.emscripten-status').hide();
+            $('.fullscreen').show();
+          }
+        },
+        SDL_numSimultaneouslyQueuedBuffers: 1
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = function(event) {
+        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+        Module.setStatus('Exception thrown, see JavaScript console');
+        Module.setStatus = function(text) {
+          if (text) Module.printErr('[post-exception status] ' + text);
+        };
+      };
+
+       $(document).ready(function () {
+         $("#fullscreen").click(function() {
+            Module.requestFullScreen(false, false);
+         });
+
+         setTimeout(function () {
+          $.ajax({
+             url: "https://js-dos.com/dosbox.js",
+             dataType: "script",
+             error: function(jqXHR, textStatus, error) {
+              $('#error').html('Exception thrown, see JavaScript console');
+              console.log(textStatus, error);
+             },
+             xhr: function() {
+               var xhr;
+               Module.setStatus("Downloading script");
+               xhr = $.ajaxSettings.xhr();
+               xhr.addEventListener("progress", function(evt) {
+                 if (evt.lengthComputable) {
+                   Module.setStatus("Downloading script... (" + evt.loaded + "/" + evt.total + ")");
+                 }
+               });
+               return xhr;
+             }
+          });
+         }, 1000);
+      });
+   </script>
+<script type="text/javascript">
+var Module;
+if (typeof Module === 'undefined') Module = eval('(function() { try { return Module || {} } catch(e) { return {} } })()');
+if (!Module.expectedDataFileDownloads) {
+  Module.expectedDataFileDownloads = 0;
+  Module.finishedDataFileDownloads = 0;
+}
+Module.expectedDataFileDownloads++;
+(function() {
+
+    var PACKAGE_PATH;
+    if (typeof window === 'object') {
+      PACKAGE_PATH = "https://js-dos.com/games/";
+    } else {
+      // worker
+      PACKAGE_PATH = "https://js-dos.com/games/";
+    }
+    var PACKAGE_NAME = '/home/caiiiycuk/js/js-dos.com/build/games/doom.exe.data';
+    var REMOTE_PACKAGE_BASE = PACKAGE_PATH+'doom.exe.data';
+    if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
+      Module['locateFile'] = Module['locateFilePackage'];
+      Module.printErr('warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)');
+    }
+    var REMOTE_PACKAGE_NAME = typeof Module['locateFile'] === 'function' ?
+                              Module['locateFile'](REMOTE_PACKAGE_BASE) :
+                              ((Module['filePackagePrefixURL'] || '') + REMOTE_PACKAGE_BASE);
+    var REMOTE_PACKAGE_SIZE = 13731014;
+    var PACKAGE_UUID = '133e8b91-0165-4224-b0f9-913f537bb216';
+  
+    function fetchRemotePackage(packageName, packageSize, callback, errback) {
+      var xhr = new XMLHttpRequest();
+
+      xhr.open('GET', packageName, true);
+      xhr.responseType = 'arraybuffer';
+      xhr.onprogress = function(event) {
+        var url = packageName;
+        var size = packageSize;
+        if (event.total) size = event.total;
+        if (event.loaded) {
+          if (!xhr.addedTotal) {
+            xhr.addedTotal = true;
+            if (!Module.dataFileDownloads) Module.dataFileDownloads = {};
+            Module.dataFileDownloads[url] = {
+              loaded: event.loaded,
+              total: size
+            };
+          } else {
+            Module.dataFileDownloads[url].loaded = event.loaded;
+          }
+          var total = 0;
+          var loaded = 0;
+          var num = 0;
+          for (var download in Module.dataFileDownloads) {
+          var data = Module.dataFileDownloads[download];
+            total += data.total;
+            loaded += data.loaded;
+            num++;
+          }
+          total = Math.ceil(total * Module.expectedDataFileDownloads/num);
+          if (Module['setStatus']) Module['setStatus']('Downloading data... (' + loaded + '/' + total + ')');
+        } else if (!Module.dataFileDownloads) {
+          if (Module['setStatus']) Module['setStatus']('Downloading data...');
+        }
+      };
+      xhr.onload = function(event) {
+        var packageData = xhr.response;
+        callback(packageData);
+      };
+      xhr.send(null);
+    };
+
+    function handleError(error) {
+      console.error('package error:', error);
+    };
+  
+      var fetched = null, fetchedCallback = null;
+      fetchRemotePackage(REMOTE_PACKAGE_NAME, REMOTE_PACKAGE_SIZE, function(data) {
+        if (fetchedCallback) {
+          fetchedCallback(data);
+          fetchedCallback = null;
+        } else {
+          fetched = data;
+        }
+      }, handleError);
+    
+  function runWithFS() {
+
+function assert(check, msg) {
+  if (!check) throw msg + new Error().stack;
+}
+
+    function DataRequest(start, end, crunched, audio) {
+      this.start = start;
+      this.end = end;
+      this.crunched = crunched;
+      this.audio = audio;
+    }
+    DataRequest.prototype = {
+      requests: {},
+      open: function(mode, name) {
+        this.name = name;
+        this.requests[name] = this;
+        Module['addRunDependency']('fp ' + this.name);
+      },
+      send: function() {},
+      onload: function() {
+        var byteArray = this.byteArray.subarray(this.start, this.end);
+
+          this.finish(byteArray);
+
+      },
+      finish: function(byteArray) {
+        var that = this;
+        Module['FS_createPreloadedFile'](this.name, null, byteArray, true, true, function() {
+          Module['removeRunDependency']('fp ' + that.name);
+        }, function() {
+          if (that.audio) {
+            Module['removeRunDependency']('fp ' + that.name); // workaround for chromium bug 124926 (still no audio with this, but at least we don't hang)
+          } else {
+            Module.printErr('Preloading file ' + that.name + ' failed');
+          }
+        }, false, true); // canOwn this data in the filesystem, it is a slide into the heap that will never change
+        this.requests[this.name] = null;
+      },
+    };
+      new DataRequest(0, 67, 0, 0).open('GET', '/MODEM.NUM');
+    new DataRequest(67, 2603, 0, 0).open('GET', '/DWANGO.STR');
+    new DataRequest(2603, 6008, 0, 0).open('GET', '/MODEM.STR');
+    new DataRequest(6008, 82906, 0, 0).open('GET', '/DMFAQ66C.TXT');
+    new DataRequest(82906, 87595, 0, 0).open('GET', '/HELPME.TXT');
+    new DataRequest(87595, 108532, 0, 0).open('GET', '/DM.EXE');
+    new DataRequest(108532, 12516824, 0, 0).open('GET', '/DOOM.WAD');
+    new DataRequest(12516824, 12551396, 0, 0).open('GET', '/DMFAQ66D.TXT');
+    new DataRequest(12551396, 12556013, 0, 0).open('GET', '/ORDER.FRM');
+    new DataRequest(12556013, 12576270, 0, 0).open('GET', '/SERSETUP.EXE');
+    new DataRequest(12576270, 12577041, 0, 0).open('GET', '/DEFAULT.CFG');
+    new DataRequest(12577041, 12587664, 0, 0).open('GET', '/DWANGO.DOC');
+    new DataRequest(12587664, 12609653, 0, 0).open('GET', '/README.TXT');
+    new DataRequest(12609653, 12729854, 0, 0).open('GET', '/DMFAQ66A.TXT');
+    new DataRequest(12729854, 13445347, 0, 0).open('GET', '/DOOM.EXE');
+    new DataRequest(13445347, 13585941, 0, 0).open('GET', '/DMFAQ66B.TXT');
+    new DataRequest(13585941, 13603992, 0, 0).open('GET', '/IPXSETUP.EXE');
+    new DataRequest(13603992, 13677630, 0, 0).open('GET', '/DWANGO.EXE');
+    new DataRequest(13677630, 13677885, 0, 0).open('GET', '/DWANGO.SRV');
+    new DataRequest(13677885, 13684282, 0, 0).open('GET', '/DM.DOC');
+    new DataRequest(13684282, 13684349, 0, 0).open('GET', '/MODEM.CFG');
+    new DataRequest(13684349, 13731014, 0, 0).open('GET', '/SETUP.EXE');
+
+    function processPackageData(arrayBuffer) {
+      Module.finishedDataFileDownloads++;
+      assert(arrayBuffer, 'Loading data file failed.');
+      var byteArray = new Uint8Array(arrayBuffer);
+      var curr;
+      
+      // Reuse the bytearray from the XHR as the source for file reads.
+      DataRequest.prototype.byteArray = byteArray;
+          DataRequest.prototype.requests["/MODEM.NUM"].onload();
+          DataRequest.prototype.requests["/DWANGO.STR"].onload();
+          DataRequest.prototype.requests["/MODEM.STR"].onload();
+          DataRequest.prototype.requests["/DMFAQ66C.TXT"].onload();
+          DataRequest.prototype.requests["/HELPME.TXT"].onload();
+          DataRequest.prototype.requests["/DM.EXE"].onload();
+          DataRequest.prototype.requests["/DOOM.WAD"].onload();
+          DataRequest.prototype.requests["/DMFAQ66D.TXT"].onload();
+          DataRequest.prototype.requests["/ORDER.FRM"].onload();
+          DataRequest.prototype.requests["/SERSETUP.EXE"].onload();
+          DataRequest.prototype.requests["/DEFAULT.CFG"].onload();
+          DataRequest.prototype.requests["/DWANGO.DOC"].onload();
+          DataRequest.prototype.requests["/README.TXT"].onload();
+          DataRequest.prototype.requests["/DMFAQ66A.TXT"].onload();
+          DataRequest.prototype.requests["/DOOM.EXE"].onload();
+          DataRequest.prototype.requests["/DMFAQ66B.TXT"].onload();
+          DataRequest.prototype.requests["/IPXSETUP.EXE"].onload();
+          DataRequest.prototype.requests["/DWANGO.EXE"].onload();
+          DataRequest.prototype.requests["/DWANGO.SRV"].onload();
+          DataRequest.prototype.requests["/DM.DOC"].onload();
+          DataRequest.prototype.requests["/MODEM.CFG"].onload();
+          DataRequest.prototype.requests["/SETUP.EXE"].onload();
+          Module['removeRunDependency']('datafile_/home/caiiiycuk/js/js-dos.com/build/games/doom.exe.data');
+
+    };
+    Module['addRunDependency']('datafile_/home/caiiiycuk/js/js-dos.com/build/games/doom.exe.data');
+  
+    if (!Module.preloadResults) Module.preloadResults = {};
+  
+      Module.preloadResults[PACKAGE_NAME] = {fromCache: false};
+      if (fetched) {
+        processPackageData(fetched);
+        fetched = null;
+      } else {
+        fetchedCallback = processPackageData;
+      }
+    
+  }
+  if (Module['calledRun']) {
+    runWithFS();
+  } else {
+    if (!Module['preRun']) Module['preRun'] = [];
+    Module["preRun"].push(runWithFS); // FS is not initialized yet, wait for it
+  }
+
+})();
+
+Module['arguments'] = [ '-conf', './dosbox.conf', './DOOM.EXE' ];
+</script>
+   <!-- <script async type="text/javascript" src="https://js-dos.com/dosbox.js"></script> -->
+</body>
+</html>

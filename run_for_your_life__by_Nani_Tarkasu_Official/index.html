@@ -1,0 +1,1419 @@
+<style>
+  body { margin: 0; overflow: hidden; }
+  canvas { width: 100vw; height: 100vh; }
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #timer {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: #fff;
+    font-family: monospace;
+    font-size: 24px;
+    z-index: 101;
+  }
+
+  #warning {
+    color: #ff0000;
+    font-family: monospace; 
+    font-size: 48px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s;
+    text-shadow: 0 0 10px #ff0000;
+    animation: textDistort 0.1s infinite;
+  }
+
+  @keyframes textDistort {
+    0% { transform: skew(0deg); }
+    25% { transform: skew(1deg); }
+    75% { transform: skew(-1deg); }
+    100% { transform: skew(0deg); }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  
+  #disclaimer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    color: #fff;  
+    font-family: sans-serif;
+    font-size: 14px;
+    max-width: 300px;
+    text-align: right;
+    z-index: 101;
+    opacity: 0.8;
+    line-height: 1.4;
+    padding: 15px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 5px;
+  }
+  
+  #static-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('static.gif');
+    opacity: 0;
+    pointer-events: none;
+    z-index: 99;
+    mix-blend-mode: hard-light;
+    transition: opacity 0.3s;
+  }
+
+  #win-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+  }
+
+  #win-text {
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 48px;
+    text-shadow: 0 0 10px #00ff00;
+    margin-bottom: 20px;
+  }
+
+  #exit-text {
+    color: #00ff00;
+    font-family: monospace; 
+    font-size: 24px;
+    text-shadow: 0 0 5px #00ff00;
+  }
+
+  #game-over {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+  }
+
+  #game-over-text {
+    color: #ff0000;
+    font-family: monospace;
+    font-size: 48px;
+    text-shadow: 0 0 10px #ff0000;
+    margin-bottom: 20px;
+  }
+
+  #retry-button {
+    padding: 10px 20px;
+    font-family: monospace;
+    font-size: 24px;
+    background: #ff0000;
+    color: #000;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  #retry-button:hover {
+    transform: scale(1.1);
+  }
+
+  #radar-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 150px;
+    height: 150px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #333;
+    border-radius: 50%;
+    z-index: 101;
+  }
+
+  #radar {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  #radar-player {
+    width: 6px;
+    height: 6px;
+    background: #ffff00;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .radar-entity {
+    width: 4px;
+    height: 4px;
+    background: #ff0000;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+
+  #radar-status {
+    position: fixed;
+    bottom: 180px;
+    left: 20px;
+    font-family: monospace;
+    font-size: 16px;
+    text-align: center;
+    width: 150px;
+    text-shadow: 0 0 5px currentColor;
+    z-index: 101;
+  }
+
+  .exit-sign {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0f0;
+    font-family: monospace;
+    font-size: 16px;
+    padding: 15px 30px;
+    background: rgba(0,0,0,0.8);
+    border: 2px solid #0f0;
+    text-shadow: 0 0 5px #0f0;
+    box-shadow: 0 0 10px #0f0;
+    transform-origin: center;
+    transform-style: preserve-3d;
+  }
+
+  #menu-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 2000;
+    overflow-y: auto;
+    padding: 20px 0;
+  }
+
+  #menu-title {
+    position: sticky;
+    top: 20px;
+    background: #000;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    z-index: 2001;
+    color: #fff;
+    font-family: monospace;
+    font-size: 48px;
+    text-shadow: 0 0 10px #fff;
+  }
+
+  .level-button {
+    padding: 20px 40px;
+    margin: 10px 0;
+    font-family: monospace;
+    font-size: 24px;
+    background: #333;
+    color: #fff;
+    border: 2px solid #666;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 400px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .level-button:hover {
+    transform: scale(1.05);
+  }
+
+  .level-description {
+    color: #888;
+    font-size: 14px;
+    margin-top: 5px;
+    font-family: sans-serif;
+  }
+
+  .difficulty-display {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .difficulty-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #666;
+  }
+
+  .difficulty-dot.active {
+    background: #ff0000;
+  }
+  
+  #hallway-death-walls {
+    background: linear-gradient(180deg, #000000 50%, #1a0000 100%);
+    border-bottom: 4px solid #111;
+  }
+
+  #hallway-death-floor {
+    background: linear-gradient(90deg, #333 0%, #444 100%);
+  }
+
+  #hallway-death-ceiling {
+    background: #111;
+    box-shadow: 0 0 20px rgba(255,0,0,0.3);
+  }
+
+  #hallway-death-light {
+    background: rgba(255,0,0,0.8);
+    box-shadow: 0 0 30px rgb(255,0,0);
+  }
+
+  #boost-meter-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #666;
+    display: none;
+    z-index: 101;
+  }
+
+  #boost-meter {
+    width: 0%;
+    height: 100%;
+    background: #808080;
+    transition: background-color 0.3s;
+  }
+
+  #distance-counter {
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    color: #fff;
+    font-family: monospace;
+    font-size: 24px;
+    z-index: 101;
+    display: none;
+  }
+  
+  #bad-ending-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+  }
+
+  #bad-ending-text {
+    color: #ff0000;
+    font-family: monospace;
+    font-size: 48px;
+    text-shadow: 0 0 10px #ff0000;
+    margin-bottom: 20px;
+  }
+
+  #death-description {
+    color: #ff0000;
+    font-family: monospace;
+    font-size: 24px;
+    text-align: center;
+    max-width: 600px;
+    margin-bottom: 30px;
+    line-height: 1.4;
+  }
+
+  #bad-ending-retry {
+    padding: 10px 20px;
+    font-family: monospace;
+    font-size: 24px;
+    background: #ff0000;
+    color: #000;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  #bad-ending-retry:hover {
+    transform: scale(1.1);
+  }
+</style>
+</head>
+<body>
+<div id="overlay">
+  <div id="warning">RUN FOR YOUR LIFE!</div>
+</div>
+<div id="timer">0:00</div>
+<div id="disclaimer">
+  This experience represents the creator&apos;s metaphorical interpretation of fears and anxieties. 
+  Created for entertainment and encouragement purposes only.
+</div>
+<div id="static-overlay"></div>
+<div id="win-screen">
+  <div id="win-text">YOU WIN!</div>
+  <div id="exit-text">You can now safely exit this experience.</div>
+</div>
+<div id="game-over">
+  <div id="game-over-text">GAME OVER</div>
+  <button id="retry-button">Retry</button>
+</div>
+<div id="bad-ending-screen">
+  <div id="bad-ending-text">BAD ENDING</div>
+  <div id="death-description">You collapsed from the overwhelming dizziness, your consciousness fading into the void...</div>
+  <button id="bad-ending-retry">Try Again</button>
+</div>
+<div id="radar-container">
+  <div id="radar">
+    <div id="radar-player"></div>
+  </div>
+</div>
+<div id="radar-status">YOU&apos;RE GOOD! DON&apos;T STOP!</div>
+<div id="menu-screen">
+  <h1 id="menu-title">Choose Your Level</h1>
+  
+  <button class="level-button" data-level="normal">
+    Level ! 
+    <div class="level-description">The original experience - Normal difficulty for beginners</div>
+    <div class="difficulty-display">
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot"></div>
+      <div class="difficulty-dot"></div>
+    </div>
+  </button>
+  
+  <button class="level-button" data-level="rainbow">
+    Level !-! 
+    <div class="level-description">A psychedelic journey - Easy difficulty with colorful visuals</div>
+    <div class="difficulty-display">
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot"></div>
+      <div class="difficulty-dot"></div>
+      <div class="difficulty-dot"></div>
+    </div>
+  </button>
+  
+  <button class="level-button" data-level="sprint">
+    Level !! 
+    <div class="level-description">Advanced difficulty - Only for seasoned runners</div>
+    <div class="difficulty-display">
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+    </div>
+  </button>
+  
+  <button class="level-button" data-level="hallway-death">
+    Level !.!-! 
+    <div class="level-description">Hallway of Death - A 90km metallic corridor bathed in red emergency lighting</div>
+    <div class="difficulty-display">
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot"></div>
+    </div>
+  </button>
+  
+  <button class="level-button" data-level="secret" style="background: #333; border-color: #666;">
+    ???
+    <div class="level-description">A demanding endurance challenge: Reach 750m before the song ends. Use X while sprinting for speed boosts at >25% charge. Higher charge = faster boost!</div>
+    <div class="difficulty-display">
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+      <div class="difficulty-dot active"></div>
+    </div>
+  </button>
+</div>
+<div id="boost-meter-container">
+  <div id="boost-meter"></div>
+</div>
+<div id="distance-counter">Distance: 0m</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/VignetteShader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/FilmShader.js"></script>
+<script>try {
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.15);
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000);
+  document.body.appendChild(renderer.domElement);
+  const entities = [];
+  let gameMode = 'normal';
+  let gameDifficulty = 'normal';
+  const DIFFICULTY_SETTINGS = {
+    easy: {
+      entityCount: 3,
+      entitySpeed: 2.5,
+      sprintModeCount: 5,
+      sprintModeSpeed: 3.8
+    },
+    normal: {
+      entityCount: 5,
+      entitySpeed: 3.5,
+      sprintModeCount: 8,
+      sprintModeSpeed: 4.8
+    },
+    hard: {
+      entityCount: 7,
+      entitySpeed: 4.5,
+      sprintModeCount: 10,
+      sprintModeSpeed: 5.8
+    }
+  };
+  const HALLWAY_DEATH_SETTINGS = {
+    entityCount: 8,
+    entitySpeed: 5.5,
+    playerSpeed: 6.0,
+    lightIntensity: 1.8,
+    fogDensity: 0.12,
+    ambientLight: 0x330000
+  };
+  const entityGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+  const entityMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    transparent: true,
+    opacity: 0.8
+  });
+  
+  // Add a utility function to generate random colors
+  function getRandomColor() {
+    const hue = Math.random();
+    return new THREE.Color().setHSL(hue, 0.5, 0.5);
+  }
+  
+  function initGameMode(mode) {
+    if (mode === 'hallway-death') {
+      gameMode = mode;
+      gameDifficulty = 'hard';
+      document.getElementById('menu-screen').style.display = 'none';
+      scene.fog = new THREE.FogExp2(0x110000, HALLWAY_DEATH_SETTINGS.fogDensity);
+      ambientLight.color.setHex(HALLWAY_DEATH_SETTINGS.ambientLight);
+      ambientLight.intensity = 0.8;
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioElement = new Audio('_Level !_ But It\'s Actually a Soundtrack REMASTERED.mp3');
+      audioElement.loop = false;
+      const source = audioContext.createMediaElementSource(audioElement);
+      source.connect(audioContext.destination);
+      audioElement.play();
+      songStartTime = performance.now();
+    } else if (mode === 'rainbow') {
+      gameMode = mode;
+      gameDifficulty = 'normal';
+      document.getElementById('menu-screen').style.display = 'none';
+      hallwaySegments.forEach(segment => {
+        scene.remove(segment);
+      });
+      hallwaySegments.length = 0;
+      
+      for (let i = -visibleSegments / 2; i < visibleSegments / 2; i++) {
+        const segment = createHallwaySegment(i * segmentDepth);
+        hallwaySegments.push(segment);
+        scene.add(segment);
+      }
+      
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioElement = new Audio('_Level !_ But It\'s Actually a Soundtrack REMASTERED.mp3');
+      audioElement.loop = false;
+      const source = audioContext.createMediaElementSource(audioElement);
+      source.connect(audioContext.destination);
+      audioElement.play();
+      songStartTime = performance.now();
+    } else if (mode === 'secret') {
+      gameMode = mode;
+      gameDifficulty = 'hard';
+      document.getElementById('menu-screen').style.display = 'none';
+      document.getElementById('boost-meter-container').style.display = 'block';
+      document.getElementById('distance-counter').style.display = 'block';
+      document.getElementById('radar-container').style.display = 'none'; // Hide radar
+      document.getElementById('radar-status').style.display = 'none'; // Hide radar status
+      
+      // Reset values
+      boostMeter = 0;
+      isBoostActive = false;
+      distanceTraveled = 0;
+      
+      // Setup gray environment
+      scene.fog = new THREE.FogExp2(0x808080, 0.15);
+      ambientLight.color.setHex(0x808080);
+      
+      // Setup music
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioElement = new Audio('credits song for my death.mp3');
+      audioElement.loop = false;
+      const source = audioContext.createMediaElementSource(audioElement);
+      source.connect(audioContext.destination);
+      audioElement.play();
+      secretLevelStartTime = performance.now();
+    } else {
+      gameMode = mode;
+      gameDifficulty = 'normal';
+      document.getElementById('menu-screen').style.display = 'none';
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioElement = new Audio('_Level !_ But It\'s Actually a Soundtrack REMASTERED.mp3');
+      audioElement.loop = false;
+      const source = audioContext.createMediaElementSource(audioElement);
+      const stereoPanner = audioContext.createStereoPanner();
+      source.connect(stereoPanner);
+      stereoPanner.connect(audioContext.destination);
+      audioElement.play();
+      songStartTime = performance.now();
+    }
+  }
+  
+  class Entity {
+    constructor(startPosition) {
+      this.mesh = new THREE.Mesh(entityGeometry, entityMaterial.clone());
+      startPosition.z += 5;
+      this.mesh.position.copy(startPosition);
+      if (gameMode === 'sprint') {
+        this.speed = DIFFICULTY_SETTINGS[gameDifficulty].sprintModeSpeed;
+      } else if (gameMode === 'hallway-death') {
+        this.speed = HALLWAY_DEATH_SETTINGS.entitySpeed;
+        this.mesh.material.color.setHex(0xff0000);
+        this.mesh.material.emissive = new THREE.Color(0x330000);
+      } else {
+        this.speed = DIFFICULTY_SETTINGS[gameDifficulty].entitySpeed;
+      }
+      scene.add(this.mesh);
+    }
+    update(playerPos, delta, isPlayerRunning) {
+      const directionToPlayer = new THREE.Vector3().subVectors(playerPos, this.mesh.position).normalize();
+      const speedMultiplier = gameMode === 'sprint' ? isPlayerRunning ? 0.8 : 1.2 : isPlayerRunning ? 0.95 : 1.2;
+      const targetSpeed = this.speed * speedMultiplier;
+      if (this.mesh.position.z > playerPos.z) {
+        this.mesh.position.add(directionToPlayer.multiplyScalar(targetSpeed * delta));
+      }
+      const distanceToPlayer = this.mesh.position.distanceTo(playerPos);
+      if (distanceToPlayer < 0.5) {
+        showGameOver();
+      }
+      return distanceToPlayer;
+    }
+  }
+  
+  function showGameOver() {
+    const gameOver = document.getElementById('game-over');
+    gameOver.style.display = 'flex';
+    isGameOver = true;
+    if (audioElement) {
+      audioElement.pause();
+    }
+    document.getElementById('radar-container').style.display = 'none';
+    document.getElementById('radar-status').style.display = 'none';
+  }
+  
+  function showBadEnding() {
+    const badEndingScreen = document.getElementById('bad-ending-screen');
+    badEndingScreen.style.display = 'flex';
+    isGameOver = true;
+    document.getElementById('boost-meter-container').style.display = 'none';
+    document.getElementById('distance-counter').style.display = 'none';
+  }
+  
+  document.getElementById('retry-button').addEventListener('click', () => {
+    location.reload();
+  });
+  
+  document.getElementById('bad-ending-retry').addEventListener('click', () => {
+    location.reload();
+  });
+  
+  function createNoiseTexture(width, height, options = {}) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.createImageData(width, height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        let value;
+        if (options.type === 'carpet') {
+          const x = i / 4 % width;
+          const y = Math.floor(i / 4 / width);
+          value = (Math.sin(x / 10) + Math.cos(y / 10) + Math.random() * options.contrast) / 3 + options.brightness;
+        } else if (options.type === 'cement') {
+          const noise = Math.random();
+          const pattern = Math.random() > 0.98 ? 0.2 : 1;
+          value = noise * pattern * options.contrast + options.brightness;
+        } else if (options.type === 'ceiling') {
+          const noise = Math.random();
+          const stain = Math.random() > 0.95 ? 0.5 : 1;
+          value = noise * stain * options.contrast + options.brightness;
+        }
+        data[i] = value * 255;
+        data[i + 1] = value * 255;
+        data[i + 2] = value * 255;
+        data[i + 3] = 255;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      return new THREE.CanvasTexture(canvas);
+    } catch (e) {
+      console.error('Error creating texture:', e);
+      return new THREE.Texture();
+    }
+  }
+  
+  const wallTexture = createNoiseTexture(256, 256, {
+    type: 'cement',
+    contrast: 0.3,
+    brightness: 0.2
+  });
+  const floorTexture = createNoiseTexture(256, 256, {
+    type: 'carpet',
+    contrast: 0.4,
+    brightness: 0.3
+  });
+  const ceilingTexture = createNoiseTexture(256, 256, {
+    type: 'ceiling',
+    contrast: 0.3,
+    brightness: 0.25
+  });
+  [wallTexture, floorTexture, ceilingTexture].forEach(texture => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.needsUpdate = true;
+  });
+  wallTexture.repeat.set(2, 2);
+  floorTexture.repeat.set(3, 3);
+  ceilingTexture.repeat.set(2, 2);
+  
+  function createHallwaySegment(position) {
+    const group = new THREE.Group();
+    const wallGeometry = new THREE.PlaneGeometry(2, 2);
+    let materials;
+    if (gameMode === 'rainbow') {
+      const hue = Math.random();
+      const color = new THREE.Color().setHSL(hue, 0.5, 0.5);
+      materials = {
+        floor: new THREE.MeshPhongMaterial({
+          color: color,
+          roughness: 1,
+          metalness: 0,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        ceiling: new THREE.MeshPhongMaterial({
+          color: color.clone().offsetHSL(0.2, 0, 0),
+          roughness: 0.9,
+          metalness: 0.1,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        wall: new THREE.MeshPhongMaterial({
+          color: color.clone().offsetHSL(0.4, 0, 0),
+          roughness: 0.8,
+          metalness: 0.2,
+          side: THREE.DoubleSide,
+          fog: true
+        })
+      };
+    } else if (gameMode === 'sprint') {
+      materials = {
+        floor: new THREE.MeshPhongMaterial({
+          color: 0x330000,
+          roughness: 1,
+          metalness: 0,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        ceiling: new THREE.MeshPhongMaterial({
+          color: 0x220000,
+          roughness: 0.9,
+          metalness: 0.1,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        wall: new THREE.MeshPhongMaterial({
+          color: 0x440000,
+          roughness: 0.8,
+          metalness: 0.2,
+          side: THREE.DoubleSide,
+          fog: true
+        })
+      };
+    } else if (gameMode === 'hallway-death') {
+      materials = {
+        floor: new THREE.MeshPhongMaterial({
+          color: 0x444444,
+          metalness: 0.8,
+          roughness: 0.2,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        ceiling: new THREE.MeshPhongMaterial({
+          color: 0x111111,
+          metalness: 0.9,
+          roughness: 0.1,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        wall: new THREE.MeshPhongMaterial({
+          color: 0x000000,
+          metalness: 0.7,
+          roughness: 0.3,
+          side: THREE.DoubleSide,
+          fog: true
+        })
+      };
+      const emergencyLight = new THREE.PointLight(0xff0000, HALLWAY_DEATH_SETTINGS.lightIntensity, 4);
+      emergencyLight.position.set(0, 0.9, 0);
+      group.add(emergencyLight);
+    } else {
+      materials = {
+        floor: new THREE.MeshPhongMaterial({
+          map: floorTexture,
+          roughness: 1,
+          metalness: 0,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        ceiling: new THREE.MeshPhongMaterial({
+          map: ceilingTexture,
+          roughness: 0.9,
+          metalness: 0.1,
+          side: THREE.DoubleSide,
+          fog: true
+        }),
+        wall: new THREE.MeshPhongMaterial({
+          map: wallTexture,
+          roughness: 0.8,
+          metalness: 0.2,
+          side: THREE.DoubleSide,
+          fog: true
+        })
+      };
+    }
+    const meshes = {
+      floor: new THREE.Mesh(wallGeometry, materials.floor),
+      ceiling: new THREE.Mesh(wallGeometry, materials.ceiling),
+      leftWall: new THREE.Mesh(wallGeometry, materials.wall),
+      rightWall: new THREE.Mesh(wallGeometry, materials.wall)
+    };
+    meshes.floor.rotation.x = -Math.PI / 2;
+    meshes.floor.position.y = -1;
+    meshes.ceiling.rotation.x = Math.PI / 2;
+    meshes.ceiling.position.y = 1;
+    meshes.leftWall.rotation.y = Math.PI / 2;
+    meshes.leftWall.position.x = -1;
+    meshes.rightWall.rotation.y = -Math.PI / 2;
+    meshes.rightWall.position.x = 1;
+    Object.values(meshes).forEach(mesh => group.add(mesh));
+    let isColorPhase1 = false;
+    let isColorPhase2 = false;
+    const light = new THREE.PointLight(0xff0000, 2.5, 3);
+    if (isColorPhase1) {
+      light.color.setHex(0x808080);
+    } else if (isColorPhase2) {
+      light.color.setHex(0xff0000);
+      light.intensity *= 2;
+    }
+    light.userData.flashSpeed = 2 + Math.random() * 4;
+    light.userData.flashTimer = Math.random() * Math.PI * 2;
+    group.add(light);
+    const signGeometry = new THREE.BoxGeometry(0.8, 0.3, 0.05);
+    const signMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      emissive: 0x00ff00,
+      emissiveIntensity: 0.5
+    });
+    const exitSign = new THREE.Mesh(signGeometry, signMaterial);
+    exitSign.position.set(0, 0.8, 0);
+    const backGeometry = new THREE.BoxGeometry(0.85, 0.35, 0.06);
+    const backMaterial = new THREE.MeshBasicMaterial({
+      color: 0x111111
+    });
+    const signBack = new THREE.Mesh(backGeometry, backMaterial);
+    signBack.position.copy(exitSign.position);
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = 'bold 48px monospace';
+    ctx.fillStyle = '#0f0';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('EXIT →', canvas.width / 2, canvas.height / 2);
+    const texture = new THREE.CanvasTexture(canvas);
+    const textMaterial = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const textGeometry = new THREE.PlaneGeometry(0.7, 0.25);
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    textMesh.position.set(0, 0.8, 0.03);
+    if (Math.abs(position) % 10 < 0.1) {
+      group.add(signBack);
+      group.add(exitSign);
+      group.add(textMesh);
+    }
+    if (gameMode === 'rainbow') {
+      // Change light color every 15 meters
+      const sectionIndex = Math.floor(Math.abs(position) / 15);
+      const lightColor = getRandomColor();
+      
+      group.children.forEach(child => {
+        if (child instanceof THREE.PointLight) {
+          child.color.copy(lightColor);
+          child.userData.baseColor = lightColor.clone(); // Store base color for intensity variations
+        }
+        if (child instanceof THREE.Mesh) {
+          if (child.material instanceof THREE.MeshPhongMaterial) {
+            child.material.color.copy(lightColor);
+            child.material.emissive = lightColor.clone().multiplyScalar(0.2);
+          }
+        }
+      });
+    }
+    group.position.z = position;
+    return group;
+  }
+  
+  const hallwaySegments = [];
+  const visibleSegments = 20;
+  const segmentDepth = 2;
+  let playerPosition = 0;
+  for (let i = -visibleSegments / 2; i < visibleSegments / 2; i++) {
+    const segment = createHallwaySegment(i * segmentDepth);
+    hallwaySegments.push(segment);
+    scene.add(segment);
+  }
+  
+  const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+  scene.add(ambientLight);
+  camera.position.set(0, 0, 0);
+  camera.lookAt(0, 0, -1);
+  const Bit16Shader = {
+    uniforms: {
+      "tDiffuse": {
+        value: null
+      }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D tDiffuse;
+      varying vec2 vUv;
+      void main() {
+        vec4 texel = texture2D(tDiffuse, vUv);
+        
+        // Quantize to 5 bits for red, 6 bits for green, 5 bits for blue (16-bit color)
+        float r = floor(texel.r * 31.0) / 31.0;
+        float g = floor(texel.g * 63.0) / 63.0;
+        float b = floor(texel.b * 31.0) / 31.0;
+        
+        gl_FragColor = vec4(r, g, b, texel.a);
+      }
+    `
+  };
+  const composer = new THREE.EffectComposer(renderer);
+  const renderPass = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPass);
+  const bit16Pass = new THREE.ShaderPass(Bit16Shader);
+  composer.addPass(bit16Pass);
+  const filmPass = new THREE.ShaderPass(THREE.FilmShader);
+  filmPass.uniforms.nIntensity.value = 0.5;
+  filmPass.uniforms.sIntensity.value = 0.5;
+  filmPass.uniforms.grayscale.value = 0;
+  composer.addPass(filmPass);
+  const vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
+  vignettePass.uniforms.darkness.value = 2.0;
+  vignettePass.uniforms.offset.value = 0.7;
+  vignettePass.renderToScreen = true;
+  composer.addPass(vignettePass);
+  let moveForward = false;
+  const moveSpeed = 2.0;
+  let prevTime = performance.now();
+  let bobValue = 0;
+  const bobSpeed = 8;
+  const bobAmount = 0.05;
+  let headTilt = 0;
+  let isRunning = false;
+  let isGameOver = false;
+  let audioContext;
+  let audioElement;
+  let songStartTime = 0;
+  let warningShown = false;
+  let shakeStarted = false;
+  let isColorPhase1 = false;
+  let isColorPhase2 = false;
+  const particleGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+  const particleMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    transparent: true,
+    opacity: 0.6
+  });
+  const particles = [];
+  let moveBackward = false;
+  let boostMeter = 0;
+  let isBoostActive = false;
+  let boostStartTime = 0;
+  let distanceTraveled = 0;
+  let secretLevelStartTime = 0;
+  function createParticle() {
+    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+    const x = (Math.random() - 0.5) * 4;
+    const y = -1;
+    const z = camera.position.z + 10 + Math.random() * 20;
+    particle.position.set(x, y, z);
+    particle.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.2, 2 + Math.random(), (Math.random() - 0.5) * 0.2);
+    scene.add(particle);
+    particles.push(particle);
+    if (isColorPhase2) {
+      particleMaterial.color.setHex(0xFF4500);
+      particle.scale.multiplyScalar(0.5);
+      particle.userData.velocity.y *= 1.5;
+    }
+  }
+  document.addEventListener('keydown', event => {
+    if (event.code === 'KeyW' && gameMode !== 'school') moveForward = true;
+    if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') isRunning = true;
+    if (event.code === 'KeyX' && gameMode === 'secret' && boostMeter >= 25 && isRunning) {
+      isBoostActive = true;
+      boostStartTime = performance.now();
+    }
+  });
+  document.addEventListener('keyup', event => {
+    if (event.code === 'KeyW' && gameMode !== 'school') moveForward = false;
+    if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') isRunning = false;
+  });
+  window.addEventListener('click', async () => {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioElement = new Audio('_Level !_ But It\'s Actually a Soundtrack REMASTERED.mp3');
+      audioElement.loop = false;
+      const source = audioContext.createMediaElementSource(audioElement);
+      const stereoPanner = audioContext.createStereoPanner();
+      source.connect(stereoPanner);
+      stereoPanner.connect(audioContext.destination);
+      audioElement.play();
+      songStartTime = performance.now();
+    }
+  });
+  document.addEventListener('pointerlockchange', () => {
+    const mouseEnabled = document.pointerLockElement === renderer.domElement;
+  });
+  let pitch = 0;
+  let yaw = 0;
+  document.addEventListener('mousemove', event => {
+    if (!document.pointerLockElement) return;
+    const sensitivity = 0.002;
+    yaw -= event.movementX * sensitivity;
+    pitch -= event.movementY * sensitivity;
+    yaw = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, yaw));
+    pitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, pitch));
+    camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+  });
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', event => {
+    touchStartX = event.touches[0].pageX;
+    touchStartY = event.touches[0].pageY;
+    moveForward = true; 
+  });
+  document.addEventListener('touchend', () => {
+    moveForward = false;
+  });
+  document.addEventListener('touchmove', event => {
+    if (!document.pointerLockElement) return;
+    const touchX = event.touches[0].pageX;
+    const touchY = event.touches[0].pageY;
+    const deltaX = touchX - touchStartX;
+    const deltaY = touchY - touchStartY;
+    const sensitivity = 0.002;
+    yaw -= deltaX * sensitivity;
+    pitch -= deltaY * sensitivity;
+    yaw = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, yaw));
+    pitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, pitch));
+    camera.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+    touchStartX = touchX;
+    touchStartY = touchY;
+  });
+  function showWinScreen() {
+    const winScreen = document.getElementById('win-screen');
+    winScreen.style.display = 'flex';
+    isGameOver = true;
+    document.getElementById('radar-container').style.display = 'none';
+    document.getElementById('radar-status').style.display = 'none';
+  }
+  function updateRadarStatus(closestDistance) {
+    const status = document.getElementById('radar-status');
+    if (audioElement) {
+      const currentTime = audioElement.currentTime;
+      if (currentTime >= 80 && currentTime < 143) {
+        status.style.color = '#00ff00';
+        status.textContent = "HAVE A BREAK, YOU'RE SAFE... FOR NOW";
+        status.style.textShadow = '0 0 5px currentColor';
+        return;
+      }
+    }
+    if (closestDistance < 2) {
+      status.style.color = '#ff0000';
+      status.textContent = "HURRY UP THEY ARE GETTING CLOSER!";
+      status.style.textShadow = '0 0 5px currentColor';
+    } else if (closestDistance < 5) {
+      status.style.color = '#ffff00';
+      status.textContent = "KEEP GOING!";
+      status.style.textShadow = '0 0 5px currentColor';
+    } else {
+      status.style.color = '#00ff00';
+      status.textContent = "YOU'RE GOOD! DON'T STOP!";
+      status.style.textShadow = '0 0 5px currentColor';
+    }
+  }
+  function updateRadarEntities(entities, playerPos) {
+    const radar = document.getElementById('radar');
+    const oldDots = radar.getElementsByClassName('radar-entity');
+    while (oldDots.length > 0) {
+      oldDots[0].remove();
+    }
+    entities.forEach(entity => {
+      const dot = document.createElement('div');
+      dot.className = 'radar-entity';
+      const relX = entity.mesh.position.x - playerPos.x;
+      const relZ = entity.mesh.position.z - playerPos.z;
+      const radarX = 75 + relX * 15;
+      const radarY = 75 + relZ * 15;
+      dot.style.left = `${radarX}px`;
+      dot.style.top = `${radarY}px`;
+      radar.appendChild(dot);
+    });
+  }
+  function animate() {
+    if (isGameOver) return;
+    requestAnimationFrame(animate);
+    const time = performance.now();
+    const delta = (time - prevTime) / 1000;
+    if (audioElement) {
+      const currentTime = Math.floor(audioElement.currentTime);
+      const minutes = Math.floor(currentTime / 60);
+      const seconds = currentTime % 60;
+      document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      if (audioElement && audioElement.currentTime >= 25 && !warningShown && gameMode !== 'secret') {
+        const warning = document.getElementById('warning');
+        warning.style.opacity = '1';
+        warningShown = true;
+        setTimeout(() => {
+          warning.style.animation = 'fadeOut 1s forwards';
+        }, 3000);
+      }
+      if (audioElement && audioElement.currentTime >= 80 && !isColorPhase1) {
+        isColorPhase1 = true;
+        filmPass.uniforms.grayscale.value = 1;
+        hallwaySegments.forEach(segment => {
+          segment.children.forEach(child => {
+            if (child instanceof THREE.PointLight) {
+              child.color.setHex(0x808080);
+            }
+          });
+        });
+      }
+      if (audioElement && audioElement.currentTime >= 143 && !isColorPhase2 && gameMode !== 'secret') {
+        isColorPhase2 = true;
+        filmPass.uniforms.grayscale.value = 0;
+        filmPass.uniforms.nIntensity.value = 1.2;
+        filmPass.uniforms.sIntensity.value = 1.3;
+        hallwaySegments.forEach(segment => {
+          segment.children.forEach(child => {
+            if (child instanceof THREE.Mesh) {
+              child.material.color.setHex(0x8A2BE2);
+            }
+            if (child instanceof THREE.PointLight) {
+              child.color.setHex(0x8A2BE2);
+              child.intensity *= 2;
+              child.userData.flashSpeed *= 2.5;
+            }
+          });
+        });
+      }
+      if (audioElement && audioElement.currentTime >= 200) {
+        showWinScreen();
+        return;
+      }
+      if (audioElement.ended) {
+        document.getElementById('warning').textContent = 'YOU SURVIVED!';
+        document.getElementById('warning').style.opacity = '1';
+        isGameOver = true;
+      }
+    }
+    const currentMoveSpeed = isRunning ? gameMode === 'hallway-death' ? HALLWAY_DEATH_SETTINGS.playerSpeed : moveSpeed * 2 : moveSpeed;
+    hallwaySegments.forEach(segment => {
+      segment.children.forEach(child => {
+        if (child instanceof THREE.PointLight) {
+          if (gameMode === 'rainbow') {
+            const baseColor = child.userData.baseColor;
+            child.color.copy(baseColor);
+            child.intensity = 1.2 + Math.sin(child.userData.flashTimer) * 0.8;
+          } else {
+            child.userData.flashTimer += delta * child.userData.flashSpeed;
+            child.intensity = 1.2 + Math.sin(child.userData.flashTimer) * 0.8;
+          }
+        }
+      });
+    });
+    if (gameMode === 'hallway-death') {
+      if (moveForward) {
+        const hallwaySpeed = isRunning ? HALLWAY_DEATH_SETTINGS.playerSpeed * 1.5 : HALLWAY_DEATH_SETTINGS.playerSpeed;
+        playerPosition -= hallwaySpeed * delta;
+      }
+      hallwaySegments.forEach(segment => {
+        segment.children.forEach(child => {
+          if (child instanceof THREE.PointLight) {
+            child.color.setHex(0xDC143C);
+            child.intensity = 1.5 + Math.sin(time * 0.005) * 0.5;
+          }
+        });
+      });
+      const lastSegment = hallwaySegments[hallwaySegments.length - 1];
+      const distanceToEnd = Math.abs(playerPosition - lastSegment.position.z);
+      if (distanceToEnd < segmentDepth * 10) {
+        const newSegment = createHallwaySegment(lastSegment.position.z - segmentDepth);
+        hallwaySegments.push(newSegment);
+        scene.add(newSegment);
+        if (hallwaySegments.length > visibleSegments) {
+          const oldSegment = hallwaySegments.shift();
+          scene.remove(oldSegment);
+          oldSegment.traverse(child => {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(material => material.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          });
+        }
+      }
+    } else {
+      if (moveForward) {
+        playerPosition -= currentMoveSpeed * delta;
+        bobValue += delta * bobSpeed;
+        const verticalBob = Math.sin(bobValue) * bobAmount;
+        const horizontalBob = Math.cos(bobValue * 0.5) * bobAmount * 0.5;
+        const targetTilt = horizontalBob;
+        headTilt += (targetTilt - headTilt) * 0.1;
+        camera.position.set(horizontalBob, verticalBob, playerPosition);
+        camera.rotation.z = targetTilt;
+        const lastSegment = hallwaySegments[hallwaySegments.length - 1];
+        const distanceToEnd = Math.abs(playerPosition - lastSegment.position.z);
+        if (distanceToEnd < segmentDepth * 10) {
+          const newSegment = createHallwaySegment(lastSegment.position.z - segmentDepth);
+          hallwaySegments.push(newSegment);
+          scene.add(newSegment);
+          if (hallwaySegments.length > visibleSegments) {
+            const oldSegment = hallwaySegments.shift();
+            scene.remove(oldSegment);
+            oldSegment.traverse(child => {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (Array.isArray(child.material)) {
+                  child.material.forEach(material => material.dispose());
+                } else {
+                  child.material.dispose();
+                }
+              }
+            });
+          }
+        }
+      } else {
+        bobValue = 0;
+        camera.position.y *= 0.9;
+        camera.position.x *= 0.9;
+        camera.rotation.z *= 0.9;
+      }
+    }
+    let shakeIntensity = 0;
+    if (audioElement && audioElement.currentTime >= 28 && audioElement.currentTime < 50) {
+      // Only apply shake if not in secret level
+      if (gameMode !== 'secret') {
+        shakeIntensity = 0.08;
+      }
+    } else if (audioElement && audioElement.currentTime >= 50 && audioElement.currentTime < 78) {
+      if (gameMode !== 'secret') {
+        shakeIntensity = 0.05;
+      }
+    } else if (audioElement && audioElement.currentTime >= 143) {
+      if (gameMode !== 'secret') {
+        shakeIntensity = 0.12;
+      }
+    }
+    if (shakeIntensity > 0) {
+      hallwaySegments.forEach(segment => {
+        segment.position.x = segment.position.x * 0.8 + (Math.random() - 0.5) * shakeIntensity * 2;
+        segment.position.y = segment.position.y * 0.8 + (Math.random() - 0.5) * shakeIntensity * 2;
+        segment.rotation.z = (Math.random() - 0.5) * shakeIntensity * 0.5;
+      });
+    }
+    if (gameMode === 'hallway-death') {
+      hallwaySegments.forEach(segment => {
+        segment.children.forEach(child => {
+          if (child instanceof THREE.PointLight) {
+            child.intensity = 1.5 + Math.sin(time * 0.008) * 0.8;
+          }
+        });
+        segment.position.x += (Math.random() - 0.5) * 0.04;
+        segment.position.y += (Math.random() - 0.5) * 0.04;
+        segment.rotation.z += (Math.random() - 0.5) * 0.02;
+      });
+    }
+    hallwaySegments.forEach(segment => {
+      segment.children.forEach(child => {
+        if (child.userData.domElement) {
+          const vector = new THREE.Vector3();
+          child.getWorldPosition(vector);
+          vector.project(camera);
+          const signElement = child.userData.domElement;
+          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
+          if (vector.z < 1) {
+            signElement.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+            signElement.style.display = 'block';
+          } else {
+            signElement.style.display = 'none';
+          }
+        }
+      });
+    });
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const particle = particles[i];
+      particle.position.add(particle.userData.velocity);
+      particle.material.opacity *= 0.98;
+      if (particle.material.opacity < 0.01) {
+        scene.remove(particle);
+        particles.splice(i, 1);
+        particle.geometry.dispose();
+        particle.material.dispose();
+      }
+    }
+    if (isColorPhase2) {
+      hallwaySegments.forEach(segment => {
+        segment.children.forEach(child => {
+          if (child instanceof THREE.Mesh && !child.material.color.equals(new THREE.Color(0x8A2BE2))) {
+            child.material.color.setHex(0x8A2BE2);
+          }
+          if (child instanceof THREE.PointLight && !child.color.equals(new THREE.Color(0x8A2BE2))) {
+            child.color.setHex(0x8A2BE2);
+          }
+        });
+      });
+    }
+    prevTime = time;
+    composer.render();
+  }
+  animate();
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    entities.forEach(entity => {
+      entity.mesh.geometry.dispose();
+      entity.mesh.geometry = new THREE.SphereGeometry(0.3, 8, 8);
+    });
+    particles.forEach(particle => {
+      scene.remove(particle);
+      particle.geometry.dispose();
+      particle.material.dispose();
+    });
+    particles.length = 0;
+  });
+  renderer.domElement.addEventListener('click', () => {
+    renderer.domElement.requestPointerLock();
+  });
+  document.querySelectorAll('.level-button').forEach(button => {
+    button.removeAttribute('data-difficulty');
+    const difficultyDisplay = document.createElement('div');
+    difficultyDisplay.className = 'difficulty-display';
+    for (let i = 0; i < 5; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'difficulty-dot';
+      if (button.dataset.level === 'normal' && i < 3) dot.classList.add('active');
+      if (button.dataset.level === 'rainbow' && i < 2) dot.classList.add('active');
+      if (button.dataset.level === 'sprint' && i < 5) dot.classList.add('active');
+      if (button.dataset.level === 'hallway-death' && i < 4) dot.classList.add('active');
+      if (button.dataset.level === 'secret' && i < 5) dot.classList.add('active');
+      difficultyDisplay.appendChild(dot);
+    }
+    button.appendChild(difficultyDisplay);
+    button.addEventListener('click', () => {
+      initGameMode(button.dataset.level);
+    });
+  });
+} catch (e) {
+  console.error('Error in main script:', e);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const disclaimer = document.getElementById('initial-disclaimer');
+  setTimeout(() => {
+    disclaimer.style.opacity = '0';
+    setTimeout(() => {
+      disclaimer.remove();
+    }, 1000);
+  }, 6000);
+});
+</script>
+</body></html>

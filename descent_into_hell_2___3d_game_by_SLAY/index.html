@@ -1,0 +1,1465 @@
+<html>
+<head>
+  <title>Descent into Hell - 3D Game</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&amp;display=swap" rel="stylesheet">
+  <style>
+    body { 
+      margin: 0;
+      background: #000;
+      color: #ff3300;
+      font-family: "Creepster", cursive;
+      overflow: hidden;
+    }
+    #game {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #ui {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+    }
+    #health {
+      font-size: 24px;
+      color: #ff0000;
+      text-shadow: 0 0 10px #ff0000;
+      margin-bottom: 10px;
+    }
+    #stats {
+      background: rgba(50, 0, 0, 0.7);
+      padding: 15px;
+      border: 2px solid #ff3300;
+      border-radius: 5px;
+      box-shadow: 0 0 20px #ff0000;
+    }
+    .stat-item {
+      margin: 5px 0;
+      font-size: 18px;
+      text-shadow: 0 0 5px #ff3300;
+    }
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: #ff4400;
+      font-size: 18px;
+      z-index: 100;
+      background: rgba(50, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .flame {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 150px;
+      background: linear-gradient(0deg, #ff4400, transparent);
+      opacity: 0.5;
+      animation: flicker 0.5s infinite alternate;
+      pointer-events: none;
+    }
+    #objective {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(50, 0, 0, 0.7);
+      padding: 15px;
+      border: 2px solid #ff3300;
+      border-radius: 5px;
+      max-width: 300px;
+      z-index: 100;
+    }
+    #timer {
+      font-size: 24px;
+      color: #ff6600;
+      text-shadow: 0 0 10px #ff3300;
+      margin-top: 10px;
+    }
+    @keyframes flicker {
+      0% { opacity: 0.5; }
+      100% { opacity: 0.8; }
+    }
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ff3300;
+      font-size: 24px;
+      pointer-events: none;
+      text-shadow: 0 0 5px #ff3300;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    .damage-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle, transparent 50%, rgba(255,0,0,0.3) 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .soul-collect {
+      position: absolute;
+      font-size: 20px;
+      color: #ff9900;
+      pointer-events: none;
+      animation: float-up 1s forwards;
+    }
+    @keyframes float-up {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-50px); opacity: 0; }
+    }
+    .demon-hit {
+      position: absolute;
+      font-size: 24px;
+      color: #ff0000;
+      pointer-events: none;
+      animation: float-damage 0.8s forwards;
+    }
+
+    @keyframes float-damage {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #ff3300;
+      pointer-events: none;
+      border-radius: 50%;
+      animation: particle-fade 1s forwards;
+    }
+
+    @keyframes particle-fade {
+      0% { transform: translate(0, 0); opacity: 1; }
+      100% { transform: translate(var(--x), var(--y)); opacity: 0; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-5px, 5px) rotate(-5deg); }
+      75% { transform: translate(5px, -5px) rotate(5deg); }
+    }
+
+    .shaking {
+      animation: shake 0.2s infinite;
+    }
+
+    @keyframes hit-flash {
+      0% { filter: brightness(5); }
+      100% { filter: brightness(1); }
+    }
+
+    .hit-flash {
+      animation: hit-flash 0.2s;
+    }
+    
+    /* New CSS animations */
+    @keyframes hellfire {
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.2) rotate(180deg); }
+      100% { transform: scale(1) rotate(360deg); }
+    }
+
+    .hell-portal {
+      position: absolute;
+      pointer-events: none;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, #ff6600, transparent);
+      animation: hellfire 2s infinite;
+    }
+
+    @keyframes screen-flash {
+      0% { background: rgba(255, 0, 0, 0.3); }
+      100% { background: transparent; }
+    }
+
+    .screen-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      animation: screen-flash 0.2s;
+    }
+
+    /* Additional VFX animations */
+    @keyframes infernal-glow {
+      0%, 100% { text-shadow: 0 0 10px #ff0000, 0 0 20px #ff3300, 0 0 30px #ff6600; }
+      50% { text-shadow: 0 0 15px #ff0000, 0 0 25px #ff3300, 0 0 35px #ff6600; }
+    }
+
+    @keyframes soul-swirl {
+      0% { transform: rotate(0deg) translateX(10px) translateY(0); }
+      100% { transform: rotate(360deg) translateX(10px) translateY(-100px); }
+    }
+
+    .soul-particle {
+      position: absolute;
+      color: #ff9900;
+      pointer-events: none;
+      animation: soul-swirl 2s forwards;
+      opacity: 0.8;
+    }
+
+    .power-text {
+      font-size: 32px;
+      animation: infernal-glow 2s infinite;
+    }
+
+    /* New VFX animations */
+    @keyframes hell-vortex {
+      0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg); }
+      50% { transform: rotate(180deg) scale(1.5); filter: hue-rotate(180deg); }
+      100% { transform: rotate(360deg) scale(1); filter: hue-rotate(360deg); }
+    }
+
+    .vortex-effect {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 0%, rgba(255,0,0,0.2) 50%, transparent 100%);
+      animation: hell-vortex 10s infinite linear;
+    }
+
+    @keyframes demon-spawn {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      50% { transform: scale(1.5) rotate(180deg); opacity: 0.8; }
+      100% { transform: scale(1) rotate(360deg); opacity: 1; }
+    }
+
+    .spawn-effect {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, #ff0000, transparent);
+      animation: demon-spawn 1s forwards;
+    }
+
+    /* Add new VFX styles */
+    @keyframes demon-death {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(2); opacity: 0.5; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .demon-death {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, #ff0000, transparent);
+      pointer-events: none;
+      animation: demon-death 1s forwards;
+    }
+
+    @keyframes health-warning {
+      0%, 100% { box-shadow: 0 0 20px #ff0000; }
+      50% { box-shadow: 0 0 40px #ff0000; }
+    }
+
+    .low-health {
+      animation: health-warning 1s infinite;
+    }
+
+    /* Add new VFX animations */
+    @keyframes hell-beam {
+      0% { transform: scaleY(0); opacity: 0; }
+      50% { transform: scaleY(1); opacity: 0.8; }
+      100% { transform: scaleY(0); opacity: 0; }
+    }
+
+    .hell-beam {
+      position: absolute;
+      width: 2px;
+      height: 100vh;
+      background: linear-gradient(to bottom, transparent, #ff0000, transparent);
+      pointer-events: none;
+      transform-origin: top;
+      animation: hell-beam 1s ease-in-out;
+    }
+
+    @keyframes lightning {
+      0%, 100% { opacity: 0; }
+      10%, 90% { opacity: 0.8; }
+    }
+
+    .lightning {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(255,100,0,0.2), transparent 70%);
+      pointer-events: none;
+      animation: lightning 0.2s ease-out;
+    }
+
+    @keyframes soul-spiral {
+      0% { transform: translate(-50%, -50%) rotate(0deg) scale(0); opacity: 1; }
+      100% { transform: translate(-50%, -50%) rotate(720deg) scale(3); opacity: 0; }
+    }
+
+    .soul-spiral {
+      position: absolute;
+      width: 50px;  
+      height: 50px;  
+      border: 2px solid #ff9900;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: soul-spiral 1s ease-out forwards;
+    }
+
+    @keyframes dig-effect {
+      0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(3) rotate(360deg); opacity: 0; }
+    }
+
+    .dig-circle {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      border: 4px solid #ff3300;
+      border-radius: 50%;
+      animation: dig-effect 1s forwards;
+      pointer-events: none;
+    }
+
+    .depth-indicator {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #ff3300;
+      font-size: 48px;
+      font-family: 'Creepster', cursive;
+      text-shadow: 0 0 10px #ff3300;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    @keyframes title-float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+      100% { transform: translateY(0); }
+    }
+
+    .hell-portal-rays {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: repeating-conic-gradient(from 0deg, transparent 0deg, rgba(255,0,0,0.2) 5deg, transparent 10deg);
+      animation: hell-portal-rays 10s linear infinite;
+    }
+
+    .hell-orb {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #ff6600, transparent);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float-orb 4s infinite ease-in-out;
+    }
+
+    @keyframes float-orb {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(var(--x), var(--y)); }
+    }
+
+    .pentagram {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border: 2px solid #ff3300;
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      animation: rotate-pentagram 10s linear infinite;
+      opacity: 0.5;
+    }
+
+    @keyframes rotate-pentagram {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .hell-chain {
+      position: absolute;
+      width: 2px;
+      height: 100px;
+      background: linear-gradient(to bottom, #ff3300, transparent);
+      animation: swing-chain 3s infinite ease-in-out;
+    }
+
+    @keyframes swing-chain {
+      0%, 100% { transform: rotate(-10deg); }
+      50% { transform: rotate(10deg); }
+    }
+
+    /* New styles for opening cutscene */
+    #cutscene {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #cutscene h1 {
+      font-size: 72px;
+      color: #ffffff;
+      text-shadow: 0 0 20px #ffffff;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeIn 2s forwards;
+    }
+    #cutscene p {
+      font-size: 24px;
+      color: #cccccc;
+      text-align: center;
+      max-width: 600px;
+      opacity: 0;
+      animation: fadeIn 2s forwards 2s;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    .firefly {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: #ffff00;
+      border-radius: 50%;
+      animation: twinkle 1s infinite;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+    .meteor {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      background: #ff0000;
+      border-radius: 50%;
+      animation: fall 3s linear;
+    }
+    @keyframes fall {
+      from { top: 0; }
+      to { top: 100vh; }
+    }
+
+    /* Chat UI Styles */
+    #chat-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      max-height: 400px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid #ff3300;
+      border-radius: 5px;
+      display: flex;
+      flex-direction: column;
+      z-index: 200;
+      color: #fff;
+    }
+    #chat-header {
+      padding: 10px;
+      background: #ff3300;
+      border-bottom: 2px solid #ff6600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #chat-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    #chat-close {
+      cursor: pointer;
+      font-size: 20px;
+    }
+    #chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    #chat-input {
+      display: flex;
+      border-top: 2px solid #ff6600;
+    }
+    #chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+    #chat-input button {
+      padding: 10px;
+      border: none;
+      background: #ff3300;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #chat-input button:hover {
+      background: #ff6600;
+    }
+
+    /* Menu UI Styles */
+    #menu-container {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 200px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid #ff3300;
+      border-radius: 5px;
+      padding: 15px;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+    }
+    #menu-container h2 {
+      margin-top: 0;
+      color: #ff3300;
+      text-align: center;
+    }
+    #menu-container button {
+      margin-top: 10px;
+      padding: 10px;
+      border: none;
+      background: #ff3300;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    #menu-container button:hover {
+      background: #ff6600;
+    }
+    #open-menu {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 10px 15px;
+      background: #ff3300;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 200;
+      transition: background 0.3s;
+    }
+    #open-menu:hover {
+      background: #ff6600;
+    }
+
+    .demon-lord-attack {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(255,68,0,0.8), transparent 70%);
+      pointer-events: none;
+      animation: lord-attack 1s forwards;
+    }
+
+    @keyframes lord-attack {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+
+    .spectral-trail {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(65,105,225,0.6), transparent 70%);
+      pointer-events: none;
+      filter: blur(2px);
+      animation: fade-trail 1s forwards;
+    }
+
+    @keyframes fade-trail {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(0.5); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Opening Cutscene -->
+  <div id="cutscene">
+    <h1>The Descent Begins</h1>
+    <p>You have been cast into the depths of Hell. Survive the horrors and collect souls to seek redemption.</p>
+  </div>
+  <!-- Title Screen -->
+  <div id="title-screen" style="display: none;">
+    <h1 style="font-size: 72px; color: #ff3300; text-shadow: 0 0 20px #ff0000; margin-bottom: 40px; animation: hellfire 2s infinite;">DESCENT INTO HELL 2</h1>
+    <button id="start-game" style="font-family: Creepster; font-size: 32px; padding: 20px 40px; background: #660000; color: #ff3300; border: 2px solid #ff3300; border-radius: 10px; cursor: pointer; transition: all 0.3s; text-shadow: 0 0 10px #ff0000;">START DESCENT</button>
+  </div>
+  <!-- Menu Button -->
+  <button id="open-menu">☰ Menu</button>
+  <!-- Settings Menu -->
+  <div id="menu-container">
+    <h2>Settings</h2>
+    <button id="close-menu">Close</button>
+    <!-- Additional settings can be added here -->
+  </div>
+  <!-- Chat UI -->
+  <div id="chat-container" style="display: none;">
+    <div id="chat-header">
+      <h2>Chat</h2>
+      <span id="chat-close">✖</span>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <input type="text" id="chat-message" placeholder="Type a message..." />
+      <button id="send-chat">Send</button>
+    </div>
+  </div>
+  <div id="game"></div>
+  <div id="ui">
+    <div id="stats">
+      <div id="health" class="power-text">SOUL POWER: 100%</div>
+      <div class="stat-item">DEPTH: 666 FT</div>
+      <div class="stat-item">DEMONS SLAIN: 0</div>
+      <div class="stat-item">SINS COLLECTED: 0</div>
+    </div>
+  </div>
+  <div id="objective">
+    <h2 style="margin-top:0">OBJECTIVE</h2>
+    <p>Survive the depths of hell and collect corrupted souls. Beware of demon guardians.</p>
+    <div id="timer">Time in Hell: 00:00</div>
+  </div>
+  <div id="controls">
+    <div>WASD - Move</div>
+    <div>Mouse - Look</div>
+    <div>SPACE - Jump</div>
+    <div>SHIFT - Sprint</div>
+    <div>E - Collect Souls</div>
+    <div>LEFT CLICK - Attack Demons</div>
+    <div>C - Toggle Chat</div>
+  </div>
+  <div class="flame"></div>
+  <div class="damage-overlay"></div>
+  <div id="crosshair">&#x2020;</div>
+  <div id="dig-prompt" style="display:none; position: fixed; bottom: 20px; right: 20px; padding: 15px; background: rgba(50,0,0,0.7); border: 2px solid #ff3300; border-radius: 5px; color: #ff3300; font-family: 'Creepster', cursive;">
+    Press F to dig deeper into hell...
+  </div>
+  <div id="vfx-container"></div>
+  <script src="menu.js"></script>
+  <script src="chat.js"></script>
+  <script type="module">
+    let DEMON_COUNT = 5;
+    const DEMON_RESPAWN_DELAY = 3000;
+    let lastDemonSpawnTime = Date.now();
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.getElementById('game').appendChild(renderer.domElement);
+    scene.fog = new THREE.FogExp2(0x330000, 0.015);
+    scene.background = new THREE.Color(0x110000);
+    class Soul {
+      constructor() {
+        const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+        const material = new THREE.MeshPhongMaterial({
+          color: 0xff9900,
+          emissive: 0xff6600,
+          wireframe: true
+        });
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.position.set((Math.random() - 0.5) * 80, 1 + Math.random() * 3, (Math.random() - 0.5) * 80);
+        scene.add(this.mesh);
+        const glowGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+          color: 0xff9900,
+          transparent: true,
+          opacity: 0.3
+        });
+        this.glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        this.mesh.add(this.glow);
+        this.particles = [];
+        this.lastParticleTime = 0;
+      }
+      update() {
+        this.mesh.rotation.y += 0.02;
+        this.mesh.position.y = 1 + Math.sin(Date.now() * 0.002) * 0.5;
+        this.glow.scale.setScalar(1.2 + Math.sin(Date.now() * 0.003) * 0.2);
+        if (Date.now() - this.lastParticleTime > 100) {
+          const particleGeometry = new THREE.SphereGeometry(0.1, 4, 4);
+          const particleMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff9900,
+            transparent: true,
+            opacity: 0.5
+          });
+          const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+          particle.position.copy(this.mesh.position);
+          particle.userData.createdAt = Date.now();
+          scene.add(particle);
+          this.particles.push(particle);
+          this.lastParticleTime = Date.now();
+        }
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const particle = this.particles[i];
+          const age = Date.now() - particle.userData.createdAt;
+          if (age > 1000) {
+            scene.remove(particle);
+            this.particles.splice(i, 1);
+          } else {
+            particle.material.opacity = 0.5 * (1 - age / 1000);
+            particle.position.y += 0.02;
+          }
+        }
+        const pulseScale = 1.2 + Math.sin(Date.now() * 0.005) * 0.3;
+        this.glow.scale.setScalar(pulseScale);
+        const time = Date.now() * 0.001;
+        for (let i = 0; i < this.particles.length; i++) {
+          const particle = this.particles[i];
+          const angle = time + i * 0.5;
+          const radius = 0.5 + Math.sin(time * 2) * 0.2;
+          particle.position.x = this.mesh.position.x + Math.cos(angle) * radius;
+          particle.position.z = this.mesh.position.z + Math.sin(angle) * radius;
+          particle.position.y += 0.02;
+        }
+        const timeSwirl = Date.now() * 0.001;
+        this.mesh.rotation.x = Math.sin(timeSwirl) * 0.2;
+        this.mesh.rotation.z = Math.cos(timeSwirl) * 0.2;
+        this.mesh.material.emissive.setHex(0xff0000 + Math.floor(Math.abs(Math.sin(timeSwirl * 2)) * 0x6600));
+        if (Math.random() < 0.2) {
+          const trail = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({
+            color: 0xff9900,
+            transparent: true,
+            opacity: 0.5
+          }));
+          trail.position.copy(this.mesh.position);
+          trail.userData.startTime = Date.now();
+          trail.userData.initialOpacity = 0.5;
+          scene.add(trail);
+        }
+        for (let i = scene.children.length - 1; i >= 0; i--) {
+          const child = scene.children[i];
+          if (child instanceof THREE.Mesh && child.userData.startTime) {
+            const fadeTime = 1000;
+            const elapsedTime = Date.now() - child.userData.startTime;
+            const opacity = child.userData.initialOpacity * (1 - elapsedTime / fadeTime);
+            if (opacity <= 0) {
+              scene.remove(child);
+            } else {
+              child.material.opacity = opacity;
+            }
+          }
+        }
+        const playerDist = this.mesh.position.distanceTo(camera.position);
+        if (playerDist < 5) {
+          const attraction = new THREE.Vector3().subVectors(camera.position, this.mesh.position).normalize().multiplyScalar(0.05);
+          this.mesh.position.add(attraction);
+        }
+        if (Math.random() < 0.05) {
+          const beam = document.createElement('div');
+          beam.className = 'hell-beam';
+          beam.style.left = `${this.mesh.position.x}px`;
+          beam.style.top = '0';
+          document.body.appendChild(beam);
+          setTimeout(() => beam.remove(), 1000);
+        }
+      }
+    }
+    class Demon {
+      constructor() {
+        const bodyGeometry = new THREE.ConeGeometry(1, 3, 8);
+        const bodyMaterial = new THREE.MeshPhongMaterial({
+          color: 0xff0000,
+          emissive: 0x330000,
+          wireframe: true
+        });
+        this.body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        const hornGeometry = new THREE.ConeGeometry(0.2, 1, 4);
+        const hornMaterial = new THREE.MeshPhongMaterial({
+          color: 0x000000,
+          emissive: 0x330000
+        });
+        this.hornLeft = new THREE.Mesh(hornGeometry, hornMaterial);
+        this.hornRight = new THREE.Mesh(hornGeometry, hornMaterial);
+        this.hornLeft.position.set(-0.5, 1.5, 0);
+        this.hornRight.position.set(0.5, 1.5, 0);
+        this.body.add(this.hornLeft);
+        this.body.add(this.hornRight);
+        this.body.position.set((Math.random() - 0.5) * 80, 2, (Math.random() - 0.5) * 80);
+        this.speed = 0.05;
+        this.health = 100;
+        scene.add(this.body);
+        const spawnEffect = document.createElement('div');
+        spawnEffect.className = 'spawn-effect';
+        spawnEffect.style.left = `${this.body.position.x}px`;
+        spawnEffect.style.top = `${this.body.position.y}px`;
+        document.body.appendChild(spawnEffect);
+        setTimeout(() => spawnEffect.remove(), 1000);
+      }
+      update(playerPosition) {
+        const direction = new THREE.Vector3().subVectors(playerPosition, this.body.position).normalize();
+        this.body.position.add(direction.multiplyScalar(this.speed));
+        this.body.lookAt(playerPosition);
+        this.body.position.y = 2 + Math.sin(Date.now() * 0.003) * 0.5;
+        this.body.rotation.y += 0.01;
+        this.body.rotation.z = Math.sin(Date.now() * 0.005) * 0.1;
+        const emissiveIntensity = 0.2 + Math.sin(Date.now() * 0.01) * 0.1;
+        this.body.material.emissive.setHex(Math.floor(emissiveIntensity * 0xff0000));
+        if (Math.random() < 0.1) {
+          const particle = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.5
+          }));
+          particle.position.copy(this.body.position);
+          scene.add(particle);
+          setTimeout(() => scene.remove(particle), 1000);
+        }
+        if (Math.random() < 0.01) {
+          const lightning = document.createElement('div');
+          lightning.className = 'lightning';
+          document.body.appendChild(lightning);
+          setTimeout(() => lightning.remove(), 200);
+        }
+        return this.body.position.distanceTo(playerPosition) < 2;
+      }
+      damage(amount) {
+        this.health -= amount;
+        createHellPortal(this.body.position);
+        createScreenFlash();
+        this.body.material.emissive.setHex(0xff0000);
+        this.body.scale.set(1.5, 1.5, 1.5);
+        setTimeout(() => {
+          this.body.scale.set(1, 1, 1);
+          this.body.material.emissive.setHex(0x330000);
+        }, 200);
+        const damageText = document.createElement('div');
+        damageText.className = 'demon-hit';
+        damageText.textContent = `-${amount}`;
+        damageText.style.left = '50%';
+        damageText.style.top = '50%';
+        document.body.appendChild(damageText);
+        setTimeout(() => damageText.remove(), 800);
+        for (let i = 0; i < 10; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = '50%';
+          particle.style.top = '50%';
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 50 + Math.random() * 50;
+          particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+          document.body.appendChild(particle);
+          setTimeout(() => particle.remove(), 1000);
+        }
+        document.body.classList.add('shaking');
+        setTimeout(() => document.body.classList.remove('shaking'), 200);
+        if (Math.random() < 0.01) {
+          const lightning = document.createElement('div');
+          lightning.className = 'lightning';
+          document.body.appendChild(lightning);
+          setTimeout(() => lightning.remove(), 200);
+        }
+        if (this.health <= 0) {
+          createDemonDeathExplosion(this.body.position);
+          const deathSound = new Audio('https://freesound.org/data/previews/572/572534_8449113-lq.mp3');
+          deathSound.volume = 0.3;
+          deathSound.play().catch(() => {});
+        }
+        return this.health <= 0;
+      }
+    }
+    function createHellPortal(position) {
+      const portal = document.createElement('div');
+      portal.className = 'hell-portal';
+      const rays = document.createElement('div');
+      rays.className = 'hell-portal-rays';
+      portal.appendChild(rays);
+      portal.style.left = `${position.x + window.innerWidth / 2}px`;
+      portal.style.top = `${window.innerHeight / 2 - position.y}px`;
+      document.body.appendChild(portal);
+      setTimeout(() => portal.remove(), 2000);
+    }
+    function createScreenFlash() {
+      const flash = document.createElement('div');
+      flash.className = 'screen-flash';
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 200);
+    }
+    const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50);
+    const groundMaterial = new THREE.MeshPhongMaterial({
+      color: 0x4a0000,
+      wireframe: true,
+      emissive: 0x200000
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    for (let i = 0; i < 30; i++) {
+      const pillarGeometry = new THREE.CylinderGeometry(0.5, 0.8, 10 + Math.random() * 10, 8);
+      const pillarMaterial = new THREE.MeshPhongMaterial({
+        color: 0x660000,
+        emissive: 0x330000,
+        wireframe: true,
+        metalness: 0.8,
+        roughness: 0.2
+      });
+      const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+      pillar.position.x = (Math.random() - 0.5) * 80;
+      pillar.position.z = (Math.random() - 0.5) * 80;
+      pillar.position.y = pillarGeometry.parameters.height / 2;
+      pillar.castShadow = true;
+      pillar.receiveShadow = true;
+      scene.add(pillar);
+    }
+    const lights = [];
+    const lightColors = [0xff5500, 0xff0000, 0xff3300];
+    for (let i = 0; i < 8; i++) {
+      const light = new THREE.PointLight(lightColors[Math.floor(Math.random() * lightColors.length)], 1, 20);
+      light.position.set((Math.random() - 0.5) * 40, 2 + Math.random() * 8, (Math.random() - 0.5) * 40);
+      light.castShadow = true;
+      scene.add(light);
+      lights.push(light);
+    }
+    const ambientLight = new THREE.AmbientLight(0x330000, 0.5);
+    scene.add(ambientLight);
+    camera.position.y = 2;
+    camera.position.z = 5;
+    let health = 100;
+    const moveSpeed = 0.15;
+    const sprintMultiplier = 1.8;
+    const jumpForce = 0.2;
+    const gravity = 0.01;
+    let velocity = 0;
+    const keys = {};
+    let isJumping = false;
+    let gameTime = 0;
+    let demons = 0;
+    let souls = 0;
+    const demonsList = [];
+    const soulsList = [];
+    for (let i = 0; i < 5; i++) {
+      demonsList.push(new Demon());
+    }
+    for (let i = 0; i < 10; i++) {
+      soulsList.push(new Soul());
+    }
+    let mouseX = 0;
+    let mouseY = 0;
+    document.addEventListener('mousemove', e => {
+      const sensitivity = 0.002;
+      mouseX = e.movementX * sensitivity;
+      mouseY = e.movementY * sensitivity;
+      camera.rotation.y -= mouseX;
+      camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x - mouseY));
+    });
+    renderer.domElement.addEventListener('click', () => {
+      renderer.domElement.requestPointerLock();
+      let nearestDemon = null;
+      let nearestDistance = Infinity;
+      demonsList.forEach((demon, index) => {
+        const distance = demon.body.position.distanceTo(camera.position);
+        if (distance < nearestDistance && distance < 5) {
+          nearestDistance = distance;
+          nearestDemon = index;
+        }
+      });
+      if (nearestDemon !== null) {
+        if (demonsList[nearestDemon].damage(34)) {
+          createDemonDeathExplosion(demonsList[nearestDemon].body.position);
+          scene.remove(demonsList[nearestDemon].body);
+          demonsList.splice(nearestDemon, 1);
+          demons++;
+          document.querySelector('.stat-item:nth-child(3)').textContent = `DEMONS SLAIN: ${demons}`;
+        }
+      }
+    });
+    function createDemonDeathExplosion(position) {
+      const explosion = new THREE.Mesh(new THREE.SphereGeometry(2), new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.5
+      }));
+      explosion.position.copy(position);
+      scene.add(explosion);
+      const scale = {
+        value: 1
+      };
+      const tween = new TWEEN.Tween(scale).to({
+        value: 5
+      }, 1000).onUpdate(() => {
+        explosion.scale.setScalar(scale.value);
+        explosion.material.opacity = 0.5 * (1 - scale.value / 5);
+      }).onComplete(() => {
+        scene.remove(explosion);
+      }).start();
+      for (let i = 0; i < 30; i++) {
+        const particle = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({
+          color: 0xff0000,
+          transparent: true,
+          opacity: 0.8
+        }));
+        particle.position.copy(position);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.2 + Math.random() * 0.3;
+        particle.userData.velocity = new THREE.Vector3(Math.cos(angle) * speed, 0.2 + Math.random() * 0.3, Math.sin(angle) * speed);
+        scene.add(particle);
+        setTimeout(() => scene.remove(particle), 2000);
+      }
+      const effect = document.createElement('div');
+      effect.className = 'demon-death';
+      effect.style.left = `${window.innerWidth / 2}px`;
+      effect.style.top = `${window.innerHeight / 2}px`;
+      document.body.appendChild(effect);
+      setTimeout(() => effect.remove(), 1000);
+    }
+    window.addEventListener('keydown', e => {
+      keys[e.key.toLowerCase()] = true;
+      if (e.key === ' ' && !isJumping) {
+        velocity = jumpForce;
+        isJumping = true;
+      }
+      if (e.key.toLowerCase() === 'e') {
+        collectSouls();
+      }
+      if (e.key.toLowerCase() === 'f' && !isDigging && camera.position.y <= 2.1 && currentDepth < MAX_DEPTH && Date.now() - lastDigTime > DIG_COOLDOWN) {
+        dig();
+      }
+    });
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+    function collectSouls() {
+      soulsList.forEach((soul, index) => {
+        if (soul.mesh.position.distanceTo(camera.position) < 3) {
+          scene.remove(soul.mesh);
+          soulsList.splice(index, 1);
+          souls++;
+          health = Math.min(100, health + 5);
+          document.querySelector('.stat-item:nth-child(4)').textContent = `SINS COLLECTED: ${souls}`;
+          for (let i = 0; i < 3; i++) {
+            const indicator = document.createElement('div');
+            indicator.className = 'soul-collect';
+            indicator.textContent = '+1 SOUL';
+            indicator.style.left = `${45 + i * 5}%`;
+            indicator.style.top = `${45 + i * 5}%`;
+            document.body.appendChild(indicator);
+            setTimeout(() => indicator.remove(), 1000);
+          }
+          soulsList.push(new Soul());
+        }
+      });
+      for (let i = 0; i < 12; i++) {
+        const soulParticle = document.createElement('div');
+        soulParticle.className = 'soul-particle';
+        soulParticle.textContent = '✧';
+        soulParticle.style.left = `${50 + (Math.random() - 0.5) * 20}%`;
+        soulParticle.style.top = `${50 + (Math.random() - 0.5) * 20}%`;
+        document.body.appendChild(soulParticle);
+        setTimeout(() => soulParticle.remove(), 2000);
+      }
+      checkHeavenCondition();
+    }
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    function takeDamage() {
+      const overlay = document.querySelector('.damage-overlay');
+      overlay.style.opacity = '1';
+      document.body.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px)`;
+      setTimeout(() => {
+        document.body.style.transform = 'none';
+      }, 100);
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.backgroundColor = '#ff0000';
+        particle.style.left = '50%';
+        particle.style.top = '50%';
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 100 + Math.random() * 50;
+        particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+        document.body.appendChild(particle);
+        setTimeout(() => particle.remove(), 1000);
+      }
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+      }, 300);
+    }
+    function animate() {
+      requestAnimationFrame(animate);
+      gameTime += 1 / 60;
+      document.getElementById('timer').textContent = `Time in Hell: ${formatTime(gameTime)}`;
+      const currentSpeed = keys['shift'] ? moveSpeed * sprintMultiplier : moveSpeed;
+      const forward = new THREE.Vector3();
+      const right = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
+      if (keys['w']) camera.position.addScaledVector(forward, currentSpeed);
+      if (keys['s']) camera.position.addScaledVector(forward, -currentSpeed);
+      if (keys['a']) camera.position.addScaledVector(right, -currentSpeed);
+      if (keys['d']) camera.position.addScaledVector(right, currentSpeed);
+      camera.position.y += velocity;
+      velocity -= gravity;
+      if (camera.position.y <= 2) {
+        camera.position.y = 2;
+        velocity = 0;
+        isJumping = false;
+      }
+      demonsList.forEach(demon => {
+        if (demon.update(camera.position)) {
+          health -= 0.5;
+          takeDamage();
+        }
+      });
+      demonsList.forEach(demon => {
+        demon.body.position.y = Math.max(2, demon.body.position.y);
+        if (demon.body.position.distanceTo(camera.position) < 1) {
+          demon.body.position.add(new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5));
+        }
+      });
+      soulsList.forEach(soul => soul.update());
+      lights.forEach((light, index) => {
+        const time = Date.now() * 0.002;
+        light.position.y = 2 + Math.sin(time + index * Math.PI) * 2;
+      });
+      scene.children.forEach(child => {
+        if (child.userData.velocity) {
+          child.position.add(child.userData.velocity);
+          child.userData.velocity.y -= 0.01;
+          child.material.opacity *= 0.98;
+        }
+      });
+      camera.position.y = Math.max(2, camera.position.y);
+      const healthDisplay = document.getElementById('health');
+      if (health < 30) {
+        healthDisplay.classList.add('low-health');
+      } else {
+        healthDisplay.classList.remove('low-health');
+      }
+      document.getElementById('health').textContent = `SOUL POWER: ${Math.floor(health)}%`;
+      if (health <= 0) {
+        document.getElementById('health').textContent = 'YOUR SOUL IS MINE!';
+      }
+      if (health < 20) {
+        camera.position.x += (Math.random() - 0.5) * 0.1;
+        camera.position.z += (Math.random() - 0.5) * 0.1;
+      }
+      let nearestDemon = Infinity;
+      demonsList.forEach(demon => {
+        const distance = demon.body.position.distanceTo(camera.position);
+        if (distance < nearestDemon) nearestDemon = distance;
+      });
+      if (nearestDemon < 10) {
+        const intensity = (10 - nearestDemon) * 0.002;
+        camera.position.x += (Math.random() - 0.5) * intensity;
+        camera.position.z += (Math.random() - 0.5) * intensity;
+      }
+      if (demonsList.length < DEMON_COUNT) {
+        const numToSpawn = DEMON_COUNT - demonsList.length;
+        for (let i = 0; i < numToSpawn; i++) {
+          demonsList.push(new Demon());
+        }
+      }
+      ground.geometry.vertices?.forEach(vertex => {
+        const distance = new THREE.Vector2(vertex.x, vertex.z).length();
+        vertex.y = Math.sin(distance * 0.3 + Date.now() * 0.001) * 0.2;
+      });
+      ground.geometry.verticesNeedUpdate = true;
+      scene.traverse(object => {
+        if (object instanceof THREE.Mesh) {
+          if (object.material.emissive) {
+            object.material.emissive.g = Math.sin(Date.now() * 0.002) * 0.1;
+          }
+        }
+      });
+      if (Math.random() < 0.1) {
+        const fireGeometry = new THREE.SphereGeometry(0.1, 4, 4);
+        const fireMaterial = new THREE.MeshBasicMaterial({
+          color: Math.random() > 0.5 ? 0xff4400 : 0xff0000,
+          transparent: true,
+          opacity: 0.7
+        });
+        const fire = new THREE.Mesh(fireGeometry, fireMaterial);
+        fire.position.set((Math.random() - 0.5) * 80, 0, (Math.random() - 0.5) * 80);
+        fire.userData = {
+          velocity: new THREE.Vector3((Math.random() - 0.5) * 0.1, 0.1 + Math.random() * 0.2, (Math.random() - 0.5) * 0.1),
+          createdAt: Date.now()
+        };
+        scene.add(fire);
+        setTimeout(() => {
+          scene.remove(fire);
+        }, 2000);
+      }
+      scene.fog.density = 0.015 + Math.sin(Date.now() * 0.001) * 0.005 + (1 - health / 100) * 0.01;
+      lights.forEach(light => {
+        light.intensity = 1 + Math.sin(Date.now() * 0.004 + Math.random()) * 0.3;
+        light.color.setHSL(0.05 + Math.random() * 0.05, 1, 0.5 + Math.random() * 0.2);
+      });
+      const vortex = document.querySelector('.vortex-effect') || document.createElement('div');
+      if (!document.querySelector('.vortex-effect')) {
+        vortex.className = 'vortex-effect';
+        document.body.appendChild(vortex);
+      }
+      vortex.style.opacity = Math.max(0.1, Math.min(0.5, (50 - health) / 100));
+      cleanupTrails();
+      TWEEN.update();
+      scene.children.forEach(child => {
+        if (child instanceof THREE.Mesh && child.material.emissive) {
+          child.material.emissive.r = 0.5 + Math.sin(Date.now() * 0.002) * 0.5;
+          if (Math.random() < 0.02) {
+            const spark = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({
+              color: 0xff9900,
+              transparent: true,
+              opacity: 0.8
+            }));
+            spark.position.copy(child.position);
+            spark.position.y += Math.random() * 2;
+            scene.add(spark);
+            new TWEEN.Tween(spark.position).to({
+              y: spark.position.y + 2
+            }, 1000).easing(TWEEN.Easing.Quadratic.Out).start();
+            new TWEEN.Tween(spark.material).to({
+              opacity: 0
+            }, 1000).onComplete(() => scene.remove(spark)).start();
+          }
+        }
+      });
+      if (Math.random() < 0.1) {
+        const pos = new THREE.Vector3((Math.random() - 0.5) * 80, 0, (Math.random() - 0.5) * 80);
+        const glow = new THREE.PointLight(0xff5500, 2, 10);
+        glow.position.copy(pos);
+        scene.add(glow);
+        new TWEEN.Tween(glow).to({
+          intensity: 0
+        }, 1000).onComplete(() => scene.remove(glow)).start();
+      }
+      if (currentDepth < MAX_DEPTH) {
+        const digPrompt = document.getElementById('dig-prompt');
+        if (camera.position.y <= 2.1 && Date.now() - lastDigTime > DIG_COOLDOWN) {
+          digPrompt.style.display = 'block';
+        } else {
+          digPrompt.style.display = 'none';
+        }
+      }
+      if (isDigging) {
+        camera.position.y = 2 + Math.sin(Date.now() * 0.01) * 0.1;
+        scene.fog.density = 0.03;
+        ground.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
+      }
+      if (gameStarted) {
+        if (Math.random() < 0.05) createHellOrb();
+        if (Math.random() < 0.02) createPentagram();
+        if (Math.random() < 0.03) createHellChain();
+        if (Math.random() < 0.05) {
+          const meteor = document.createElement('div');
+          meteor.className = 'meteor';
+          meteor.style.left = Math.random() * 100 + '%';
+          document.body.appendChild(meteor);
+          setTimeout(() => meteor.remove(), 3000);
+        }
+      }
+      renderer.render(scene, camera);
+    }
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    function cleanupTrails() {
+      scene.children.forEach(child => {
+        if (child.userData.startTime) {
+          const elapsedTime = Date.now() - child.userData.startTime;
+          if (elapsedTime >= 1000) {
+            scene.remove(child);
+          }
+        }
+      });
+    }
+    let currentDepth = 0;
+    const DIG_INTERVAL = 100;
+    const MAX_DEPTH = 6666;
+    let lastDigTime = 0;
+    const DIG_COOLDOWN = 2000;
+    let isDigging = false;
+    function dig() {
+      isDigging = true;
+      lastDigTime = Date.now();
+      const circle = document.createElement('div');
+      circle.className = 'dig-circle';
+      document.body.appendChild(circle);
+      const depthIndicator = document.createElement('div');
+      depthIndicator.className = 'depth-indicator';
+      depthIndicator.textContent = `DEPTH: ${currentDepth + DIG_INTERVAL}FT`;
+      depthIndicator.style.opacity = '1';
+      document.body.appendChild(depthIndicator);
+      document.body.classList.add('shaking');
+      setTimeout(() => {
+        currentDepth += DIG_INTERVAL;
+        document.querySelector('.stat-item:nth-child(2)').textContent = `DEPTH: ${currentDepth} FT`;
+        DEMON_COUNT = Math.min(10, 5 + Math.floor(currentDepth / 1000));
+        circle.remove();
+        depthIndicator.style.opacity = '0';
+        setTimeout(() => depthIndicator.remove(), 500);
+        document.body.classList.remove('shaking');
+        isDigging = false;
+        while (demonsList.length < DEMON_COUNT) {
+          demonsList.push(new Demon());
+        }
+        const flash = document.createElement('div');
+        flash.className = 'screen-flash';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 200);
+        for (let i = 0; i < 20; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = '50%';
+          particle.style.top = '50%';
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 100;
+          particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+          document.body.appendChild(particle);
+          setTimeout(() => particle.remove(), 1000);
+        }
+        for (let i = 0; i < 3; i++) {
+          const beam = document.createElement('div');
+          beam.className = 'hell-beam';
+          beam.style.left = `${Math.random() * 100}%`;
+          document.body.appendChild(beam);
+          setTimeout(() => beam.remove(), 1000);
+        }
+      }, 1000);
+    }
+    const titleScreen = document.getElementById('title-screen');
+    const startGameBtn = document.getElementById('start-game');
+    const vfxContainer = document.getElementById('vfx-container');
+    let gameStarted = false;
+    startGameBtn.addEventListener('click', () => {
+      gameStarted = true;
+      titleScreen.style.display = 'none';
+      document.getElementById('cutscene').style.display = 'none';
+      startGame();
+    });
+    function startGame() {
+      animate();
+      createInitialVFX();
+    }
+    function createInitialVFX() {
+      for (let i = 0; i < 10; i++) {
+        createHellOrb();
+        createPentagram();
+        createHellChain();
+      }
+    }
+    function createHellOrb() {
+      const orb = document.createElement('div');
+      orb.className = 'hell-orb';
+      orb.style.left = Math.random() * window.innerWidth + 'px';
+      orb.style.top = Math.random() * window.innerHeight + 'px';
+      orb.style.setProperty('--x', (Math.random() - 0.5) * 100 + 'px');
+      orb.style.setProperty('--y', (Math.random() - 0.5) * 100 + 'px');
+      vfxContainer.appendChild(orb);
+      setTimeout(() => orb.remove(), 4000);
+    }
+    function createPentagram() {
+      const pentagram = document.createElement('div');
+      pentagram.className = 'pentagram';
+      pentagram.style.left = Math.random() * window.innerWidth + 'px';
+      pentagram.style.top = Math.random() * window.innerHeight + 'px';
+      vfxContainer.appendChild(pentagram);
+      setTimeout(() => pentagram.remove(), 10000);
+    }
+    function createHellChain() {
+      const chain = document.createElement('div');
+      chain.className = 'hell-chain';
+      chain.style.left = Math.random() * window.innerWidth + 'px';
+      chain.style.top = -100 + 'px';
+      vfxContainer.appendChild(chain);
+      setTimeout(() => chain.remove(), 3000);
+    }
+    // Cutscene Logic
+    const cutscene = document.getElementById('cutscene');
+    function playCutscene() {
+      setTimeout(() => {
+        // Hide cutscene and show title screen
+        cutscene.style.display = 'none';
+        titleScreen.style.display = 'flex';
+      }, 6000); // Duration of cutscene in milliseconds
+    }
+    // Start playing the cutscene when the page loads
+    window.addEventListener('load', playCutscene);
+    function checkHeavenCondition() {
+      if (souls >= 10) {
+        const heavenPrompt = document.createElement('div');
+        heavenPrompt.id = 'heaven-prompt';
+        heavenPrompt.style.position = 'fixed';
+        heavenPrompt.style.width = '100%';
+        heavenPrompt.style.height = '100%';
+        heavenPrompt.style.background = 'rgba(255,255,255,0.8)';
+        heavenPrompt.style.zIndex = '3000';
+        heavenPrompt.style.display = 'flex';
+        heavenPrompt.style.flexDirection = 'column';
+        heavenPrompt.style.alignItems = 'center';
+        heavenPrompt.style.justifyContent = 'center';
+        heavenPrompt.innerHTML = `
+          <h1 style="font-size: 48px; color: #000;">Ascend to Heaven</h1>
+          <p style="font-size: 24px; color: #000; max-width: 600px; text-align: center;">You have collected enough souls. Do you wish to ascend to Heaven?</p>
+          <button id="ascend-button" style="font-size: 24px; padding: 10px 20px; margin-top: 20px;">Ascend</button>
+        `;
+        document.body.appendChild(heavenPrompt);
+        document.getElementById('ascend-button').addEventListener('click', () => {
+          window.location.href = 'heaven.html';
+        });
+      }
+    }
+    // Add more VFX to the game
+    function createFireflies() {
+      const firefly = document.createElement('div');
+      firefly.className = 'firefly';
+      firefly.style.left = Math.random() * 100 + '%';
+      firefly.style.top = Math.random() * 100 + '%';
+      document.body.appendChild(firefly);
+      setTimeout(() => firefly.remove(), 5000);
+    }
+    setInterval(createFireflies, 500);
+    animate();
+  </script>
+</body>
+</html>
