@@ -95,6 +95,7 @@ function getHubHTML() {
 	<div class="toolbar-left">
 	<span class="breadcrumb" id="breadcrumb">Select a file</span>
 	</div>
+	<button class="exit-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
 	<button class="exit-btn" onclick="exitFile()">← Exit</button>
 	</div>
 	<div id="viewContainer"><div class="no-file">Select a file to load</div></div>
@@ -156,6 +157,21 @@ function getHubHTML() {
 		viewContainer.innerHTML = '<div class="no-file">Select a file to load</div>';
 		breadcrumb.textContent = 'Select a file';
 		document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
+	}
+	function toggleFullscreen() {
+		const viewContainer = document.getElementById('viewContainer');
+		const sidebar = document.querySelector('.sidebar');
+		const toolbar = document.querySelector('.toolbar');
+
+		if (viewContainer.classList.contains('fullscreen')) {
+			viewContainer.classList.remove('fullscreen');
+			sidebar.style.display = 'flex';
+			toolbar.style.display = 'flex';
+		} else {
+			viewContainer.classList.add('fullscreen');
+			sidebar.style.display = 'none';
+			toolbar.style.display = 'none';
+		}
 	}
 	document.getElementById('search').addEventListener('input', (e) => {
 		const query = e.target.value.toLowerCase();
