@@ -47,7 +47,7 @@ export default {
 		}
 
 		// Fetch from GitHub raw
-		const githubUrl = `https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/${file.path}`;
+		const githubUrl = `https://raw.githubusercontent.com/viewerofall/html-hub/main/${file.path}`;
 		const response = await fetch(githubUrl);
 
 		if (!response.ok) {
