@@ -38,8 +38,12 @@ export default {
 			return new Response('File not found', { status: 404 });
 		}
 
-		const githubUrl = `https://raw.githubusercontent.com/viewerofall-labs/main/html-hub/${file.path}`;
-		const response = await fetch(githubUrl);
+		const githubUrl = `https://raw.githubusercontent.com/viewerofall-labs/html-hub/main/${file.path}`;
+		const response = await fetch(githubUrl, {
+			headers: {
+				'User-Agent': 'File-Hub-Worker'
+			}
+		});
 
 		if (!response.ok) {
 			return new Response('File fetch failed', { status: response.status });
