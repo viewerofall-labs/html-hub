@@ -12,6 +12,16 @@ export default {
 
 		const isLocked = await env[KV_NAMESPACE].get('locked') === 'true';
 
+		if (pathname === '/api/lockdown' && request.method === 'GET') {
+			const key = request.headers.get('X-Admin-Key');
+			if (key !== LOCKDOWN_KEY) {
+				return new Response(JSON.stringify({ error: 'Invalid key' }), { status: 403 });
+			}
+			return new Response(JSON.stringify({ locked: isLocked }), {
+				headers: { 'Content-Type': 'application/json' },
+			});
+		}
+
 		if (pathname === '/api/lockdown' && request.method === 'POST') {
 			const body = await request.json();
 			if (body.key !== LOCKDOWN_KEY) {
